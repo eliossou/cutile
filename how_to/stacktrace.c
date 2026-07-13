@@ -22,7 +22,7 @@ void print_stacktrace()
         u8Arrview filename = u8arrview_ptr(fr->filename, fr->filename_length);
 
         print(
-            fstr0("  #% at % in %:%\n"),
+            fstr0("  #% at % in %:%:%\n"),
             format_int(i),
             format_address(fr->program_counter),
             format_str(routine_name),
