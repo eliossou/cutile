@@ -198,43 +198,43 @@
 
     cut_inlinable int cut_format_int_digits_count(cut_s64 nb)
     {
-        nb &= ~((cut_u64)0 << 63);
+        cut_u64 v = nb < 0 ? -(cut_u64)nb : (cut_u64)nb;
 
-        if (nb < 10)
+        if (v < 10)
             return 1;
-        else if (nb < 100)
+        else if (v < 100)
             return 2;
-        else if (nb < 1000)
+        else if (v < 1000)
             return 3;
-        else if (nb < 10000)
+        else if (v < 10000)
             return 4;
-        else if (nb < 100000)
+        else if (v < 100000)
             return 5;
-        else if (nb < 1000000)
+        else if (v < 1000000)
             return 6;
-        else if (nb < 10000000)
+        else if (v < 10000000)
             return 7;
-        else if (nb < 100000000)
+        else if (v < 100000000)
             return 8;
-        else if (nb < 1000000000)
+        else if (v < 1000000000)
             return 9;
-        else if (nb < 10000000000)
+        else if (v < 10000000000)
             return 10;
-        else if (nb < 100000000000)
+        else if (v < 100000000000)
             return 11;
-        else if (nb < 1000000000000)
+        else if (v < 1000000000000)
             return 12;
-        else if (nb < 10000000000000)
+        else if (v < 10000000000000)
             return 13;
-        else if (nb < 100000000000000)
+        else if (v < 100000000000000)
             return 14;
-        else if (nb < 1000000000000000)
+        else if (v < 1000000000000000)
             return 15;
-        else if (nb < 10000000000000000)
+        else if (v < 10000000000000000)
             return 16;
-        else if (nb < 100000000000000000)
+        else if (v < 100000000000000000)
             return 17;
-        else if (nb < 1000000000000000000)
+        else if (v < 1000000000000000000)
             return 18;
         else
             return 19;
@@ -261,7 +261,6 @@
         int nb_digits = cut_format_int_digits_count(format->value);
 
         cut_s8 remainder;
-        cut_s8 mask;
         for (int i = nb_digits - 1; i >= 0; i--) {
             remainder = format->value % 10;
             remainder = remainder < 0 ? -remainder : remainder;
@@ -273,37 +272,37 @@
 
     cut_inlinable int cut_format_int_hex_digits_count(cut_s64 nb)
     {
-        nb &= ~((cut_s64)0 << 63);
+        cut_u64 v = nb < 0 ? -(cut_u64)nb : (cut_u64)nb;
 
-        if (nb <= 0xF)
+        if (v <= 0xF)
             return 1;
-        else if (nb <= 0xFF)
+        else if (v <= 0xFF)
             return 2;
-        else if (nb <= 0xFFF)
+        else if (v <= 0xFFF)
             return 3;
-        else if (nb <= 0xFFFF)
+        else if (v <= 0xFFFF)
             return 4;
-        else if (nb <= 0xFFFFF)
+        else if (v <= 0xFFFFF)
             return 5;
-        else if (nb <= 0xFFFFFF)
+        else if (v <= 0xFFFFFF)
             return 6;
-        else if (nb <= 0xFFFFFFF)
+        else if (v <= 0xFFFFFFF)
             return 7;
-        else if (nb <= 0xFFFFFFFF)
+        else if (v <= 0xFFFFFFFF)
             return 8;
-        else if (nb <= 0xFFFFFFFFF)
+        else if (v <= 0xFFFFFFFFF)
             return 9;
-        else if (nb <= 0xFFFFFFFFFF)
+        else if (v <= 0xFFFFFFFFFF)
             return 10;
-        else if (nb <= 0xFFFFFFFFFFF)
+        else if (v <= 0xFFFFFFFFFFF)
             return 11;
-        else if (nb <= 0xFFFFFFFFFFFF)
+        else if (v <= 0xFFFFFFFFFFFF)
             return 12;
-        else if (nb <= 0xFFFFFFFFFFFFF)
+        else if (v <= 0xFFFFFFFFFFFFF)
             return 13;
-        else if (nb <= 0xFFFFFFFFFFFFFF)
+        else if (v <= 0xFFFFFFFFFFFFFF)
             return 14;
-        else if (nb <= 0xFFFFFFFFFFFFFFF)
+        else if (v <= 0xFFFFFFFFFFFFFFF)
             return 15;
         else
             return 16;
@@ -311,12 +310,9 @@
 
     int cut_format_int_hex_count(void *param)
     {
-        Cut_Format_Int *format = (Cut_Format_Int *)param;
+        Cut_Format_Int_Hex *format = (Cut_Format_Int_Hex *)param;
 
-        int nb_digits;
-        unsigned negative = ((cut_u64)format->value) >> 63;
-
-        return cut_format_int_hex_digits_count(format->value) + negative + 2;
+        return cut_format_int_hex_digits_count(format->value) + 2;
     }
 
     void cut_format_int_hex_proc(void *param, cut_u8 *data, cut_u32 *index)
