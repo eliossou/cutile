@@ -41,4 +41,67 @@ void run_dyn_array_tests()
     test(arr.count == 0);
 
     dyn_array_deinit(&arr);
+
+    // add_back_many
+    {
+        Dyn_Array arr2 = {
+            .element_size = sizeof(int),
+            .increment = 5,
+            .mem_allocator = memallocator
+        };
+        dyn_array_init(&arr2, 2);
+
+        int vals[] = {10, 20, 30};
+        dyn_array_add_back_many(&arr2, vals, 3);
+        test(arr2.count == 3);
+        test(*(int *)dyn_array_at(&arr2, 0) == 10);
+        test(*(int *)dyn_array_at(&arr2, 2) == 30);
+
+        dyn_array_deinit(&arr2);
+    }
+
+    // remove_at
+    {
+        Dyn_Array arr3 = {
+            .element_size = sizeof(int),
+            .increment = 5,
+            .mem_allocator = memallocator
+        };
+        dyn_array_init(&arr3, 10);
+        dyn_array_add_back(&arr3, &(int){0});
+        dyn_array_add_back(&arr3, &(int){1});
+        dyn_array_add_back(&arr3, &(int){2});
+        dyn_array_add_back(&arr3, &(int){3});
+        dyn_array_add_back(&arr3, &(int){4});
+
+        dyn_array_remove_at(&arr3, 2);
+        test(arr3.count == 4);
+        test(*(int *)dyn_array_at(&arr3, 0) == 0);
+        test(*(int *)dyn_array_at(&arr3, 1) == 1);
+        test(*(int *)dyn_array_at(&arr3, 2) == 3);
+        test(*(int *)dyn_array_at(&arr3, 3) == 4);
+
+        dyn_array_deinit(&arr3);
+    }
+
+    // clear and back
+    {
+        Dyn_Array arr4 = {
+            .element_size = sizeof(int),
+            .increment = 5,
+            .mem_allocator = memallocator
+        };
+        dyn_array_init(&arr4, 10);
+        dyn_array_add_back(&arr4, &(int){7});
+        dyn_array_add_back(&arr4, &(int){8});
+        dyn_array_add_back(&arr4, &(int){9});
+
+        test(*(int *)dyn_array_back(&arr4) == 9);
+        test(dyn_array_back_index(&arr4) == 2);
+
+        dyn_array_clear(&arr4);
+        test(arr4.count == 0);
+
+        dyn_array_deinit(&arr4);
+    }
 }

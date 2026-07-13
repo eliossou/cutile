@@ -31,7 +31,9 @@ int failed_tests = 0;
 #include "ini_tests.c"
 #include "memory_tests.c"
 #include "memory_debug_tests.c"
+#include "print_tests.c"
 #include "stacktrace_tests.c"
+#include "str_tests.c"
 #include "utf8_tests.c"
 
 void free_nothing(void *unused1, void *unused2)
@@ -73,7 +75,9 @@ int main()
     run_ini_tests();
     run_memory_tests();
     run_memory_debug_tests();
+    run_print_tests();
     run_stacktrace_tests();
+    run_str_tests();
     run_utf8_tests();
 
     print(
