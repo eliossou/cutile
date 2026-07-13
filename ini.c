@@ -124,7 +124,7 @@
 
         // Extracts characters until one is relevant.
         while (1) {
-            if (state->index >= state->data_size) 
+            if (state->index >= state->data_size)
                 goto end_of_data;
 
             ch = state->data[state->index];
@@ -143,7 +143,7 @@
         // Comment
         if (ch == ';') {
             while (1) {
-                if (state->index >= state->data_size) 
+                if (state->index >= state->data_size)
                     goto end_of_data;
 
                 ch = state->data[state->index++];
@@ -193,7 +193,7 @@
         }
 
         // Unknown token... Something is wrong!
-        else 
+        else
             tok.kind = cut_ini_parser_token_kind_unknown;
 
         return tok;
@@ -234,7 +234,7 @@
 
         if (section->fields.count >= section->fields.capacity) {
             cut_u32 new_capacity = section->fields.capacity * 2;
-            section->fields.data = cut_mem_allocate(sizeof(Cut_Ini_Field), &result->mem_allocator);
+            section->fields.data = cut_mem_reallocate(sizeof(Cut_Ini_Field) * new_capacity, &result->mem_allocator);
             section->fields.capacity = new_capacity;
         }
         section->fields.data[section->fields.count] = field;
