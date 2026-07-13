@@ -126,7 +126,7 @@
     #undef cut_utf8_str_for
     #define cut_utf8_str_for(u8ArrviewStr, Utf8StrItName, Code)                     \
     {                                                                               \
-        u32 cut__utf8_str_for_i = 0;                                                \
+        cut_u32 cut__utf8_str_for_i = 0;                                            \
         Cut_Utf8_Str_Iterator Utf8StrItName;                                        \
         while (cut__utf8_str_for_i < (u8ArrviewStr).count) {                        \
             if ((u8ArrviewStr).data[cut__utf8_str_for_i] <= 0x7F) {                 \
