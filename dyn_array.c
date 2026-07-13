@@ -94,7 +94,7 @@
 
     cut_inlinable void *cut_dyn_array_add_back_many_empty(Cut_Dyn_Array *arr, cut_u32 count)
     {
-        if (arr->count + count == arr->capacity)
+        if (arr->count + count >= arr->capacity)
             cut_dyn_array_resize(arr, arr->capacity + cut_MAX(count, arr->increment));
 
         void *result = cut_dyn_array_at(arr, arr->count);
