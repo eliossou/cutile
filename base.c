@@ -157,7 +157,7 @@
     typedef cut_u8arrview Cut_u8Arrview;
 
     #define cut_u8arrview(Array) (Cut_u8Arrview){ Array, cut_array_size(Array) }
-    #define cut_u8arrview_0(Array0) (Cut_u8Arrview){ Array, cut_array_size(Array) - 1 }
+    #define cut_u8arrview_0(Array0) (Cut_u8Arrview){ Array0, cut_array_size(Array0) - 1 }
     #define cut_u8arrview_ptr(DataPtr, Count) (cut_u8arrview){ DataPtr, Count }
 
     // Makes a Cut_u8Arrview from a pointer to an 0 terminated u8 array.
