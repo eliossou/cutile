@@ -156,8 +156,12 @@
     {
         cut_assert(arr->count > index);
 
-        cut_u32 to_copy = arr->count - index;
-        cut_mem_cpy((cut_u8 *)arr->data + index, (cut_u8 *)arr->data + index + 1, arr->element_size * to_copy);
+        cut_u32 to_copy = arr->count - index - 1;
+        cut_mem_cpy(
+            (cut_u8 *)arr->data + (index * arr->element_size),
+            (cut_u8 *)arr->data + ((index + 1) * arr->element_size),
+            arr->element_size * to_copy
+        );
         arr->count -= 1;
     }
 
