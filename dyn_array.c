@@ -1,4 +1,3 @@
-// Cut_Dyn_Array represents an array whose size can increase during runtime when adding elements but it has not enough space.
 // Memory allocation failures are not checked, you need to handle this yourself.
 
 #ifndef CUT_DYN_ARRAY
@@ -105,7 +104,7 @@
 
     cut_inlinable void *cut_dyn_array_add_back_many(Cut_Dyn_Array *arr, void *vals, cut_u32 count)
     {
-        void *result = cut_dyn_array_add_back_many_empty(arr, arr->count);
+        void *result = cut_dyn_array_add_back_many_empty(arr, count);
 
         cut_mem_cpy(result, vals, arr->element_size * count);
 
