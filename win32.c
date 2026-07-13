@@ -36,6 +36,10 @@
         #define cut_WIN32_INVALID_HANDLE_VALUE ((cut_WIN32_HANDLE)-1)
     #endif
 
+    #if !defined(cut_WIN32_GetStdHandle)
+        #define cut_WIN32_GetStdHandle GetStdHandle
+    #endif
+
     // File API:
 
     #if !defined(cut_WIN32_FILE_GENERIC_READ)

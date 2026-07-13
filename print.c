@@ -146,8 +146,8 @@
         Cut_Formatter *param;
 
         #if CUT_TARGET_OS == CUT_WINDOWS
-            cut_WIN32_HANDLE out = GetStdHandle(cut_WIN32_STD_OUTPUT_HANDLE);
-            DWORD written;
+            cut_WIN32_HANDLE out = cut_WIN32_GetStdHandle(cut_WIN32_STD_OUTPUT_HANDLE);
+            cut_WIN32_DWORD written;
         #endif
 
         while (i < format.count) {
