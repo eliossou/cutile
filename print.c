@@ -380,6 +380,7 @@
         while (*str0) {
             data[*index] = *str0;
             (*index)++;
+            str0++;
         }
     }
 #endif
