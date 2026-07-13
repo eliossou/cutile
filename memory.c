@@ -221,7 +221,7 @@
 
     #if CUT_TARGET_OS == CUT_WINDOWS
         #include "win32.c"
-    #elif CUT_TARGET_OS == CUT_MACOS
+    #elif CUT_TARGET_OS == CUT_MACOS || CUT_TARGET_OS == CUT_LINUX
         #include <sys/mman.h>
     #endif
 
