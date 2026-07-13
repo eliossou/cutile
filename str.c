@@ -20,6 +20,8 @@
                 return 0;
             if (*l2 == 0)
                 return 1;
+            l2++;
+            r2++;
         }
     }
 
