@@ -9,10 +9,16 @@
     // Same as mem_cmp but returns 1 when identical not 0.
     cut_inlinable int cut_mem_is_same(void *l, void *r, cut_u64 size);
 
+    // Faster version of cut_mem_cmp that processes memory in 64-bit words.
+    cut_inlinable int cut_mem_cmp_fast(void *l, void *r, cut_u64 size);
+
     #define cut_arrview_is_same(ArrViewPtr1, ArrViewPtr2)   \
         ((ArrViewPtr1)->count == (ArrViewPtr2)->count && cut_mem_is_same((ArrViewPtr1)->data, (ArrViewPtr2)->data, (ArrViewPtr2)->count))
 
     cut_inlinable void cut_mem_cpy(void *dest, void *src, cut_u64 size);
+
+    // Faster version of cut_mem_cpy that copies memory in 64-bit words.
+    cut_inlinable void cut_mem_cpy_fast(void *dest, void *src, cut_u64 size);
 
     cut_inlinable void cut_mem_set(void *dest, cut_u8 val, cut_u64 size);
 
@@ -82,9 +88,11 @@
 
     #if defined(CUT_MEMORY_SHORT_NAMES) || defined(CUT_SHORT_NAMES)
         #define mem_cmp(l, r, size) cut_mem_cmp(l, r, size)
+        #define mem_cmp_fast(l, r, size) cut_mem_cmp_fast(l, r, size)
         #define mem_is_same(l, r, size) cut_mem_is_same(l, r, size)
         #define arrview_is_same cut_arrview_is_same
         #define mem_cpy(dest, src, size) cut_mem_cpy(dest, src, size)
+        #define mem_cpy_fast(dest, src, size) cut_mem_cpy_fast(dest, src, size)
         #define mem_set(DestPtr, Val, Size) cut_mem_set(DestPtr, Val, Size)
 
         typedef Cut_Mem_Allocator Mem_Allocator;
@@ -140,6 +148,36 @@
     {
         for (cut_u64 i = 0; i < size; i++) {
             ((cut_u8*)dest)[i] = ((cut_u8*)src)[i];
+        }
+    }
+
+    cut_inlinable int cut_mem_cmp_fast(void *l, void *r, cut_u64 size)
+    {
+        cut_u64 *lw = l, *rw = r;
+        cut_u64 n = size / 8;
+        for (cut_u64 i = 0; i < n; i++) {
+            if (lw[i] != rw[i])
+                return 1;
+        }
+        cut_u8 *lb = (cut_u8 *)(lw + n), *rb = (cut_u8 *)(rw + n);
+        for (cut_u64 i = n * 8; i < size; i++) {
+            if (*lb != *rb)
+                return 1;
+            lb++; rb++;
+        }
+        return 0;
+    }
+
+    cut_inlinable void cut_mem_cpy_fast(void *dest, void *src, cut_u64 size)
+    {
+        cut_u64 *d = dest, *s = src;
+        cut_u64 n = size / 8;
+        for (cut_u64 i = 0; i < n; i++)
+            d[i] = s[i];
+        cut_u8 *db = (cut_u8 *)(d + n), *sb = (cut_u8 *)(s + n);
+        for (cut_u64 i = n * 8; i < size; i++) {
+            *db = *sb;
+            db++; sb++;
         }
     }
 
