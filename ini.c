@@ -234,7 +234,12 @@
 
         if (section->fields.count >= section->fields.capacity) {
             cut_u32 new_capacity = section->fields.capacity * 2;
-            section->fields.data = cut_mem_reallocate(sizeof(Cut_Ini_Field) * new_capacity, &result->mem_allocator);
+            section->fields.data = cut_mem_resize(
+                sizeof(Cut_Ini_Field) * new_capacity,
+                section->fields.data,
+                sizeof(Cut_Ini_Field) * section->fields.capacity,
+                &result->mem_allocator
+            );
             section->fields.capacity = new_capacity;
         }
         section->fields.data[section->fields.count] = field;
