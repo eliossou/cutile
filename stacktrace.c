@@ -21,6 +21,8 @@
     #ifdef CUT_SHORT_NAMES
         #define stacktrace_api_init() cut_stacktrace_api_init()
         #define stacktrace(frames, frames_count, max_frames_count, skip) cut_stacktrace(frames, frames_count, max_frames_count, skip)
+
+        typedef Cut_Stacktrace_Frame Stacktrace_Frame;
     #endif
 #endif
 
