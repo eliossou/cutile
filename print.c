@@ -157,16 +157,24 @@
                 if (tmp_count + count > CUT_PRINT_FLUSH_SIZE) {
                     #if CUT_TARGET_OS == CUT_WINDOWS
                         if (out && out != cut_WIN32_INVALID_HANDLE_VALUE)
-                            WriteConsoleA(out, buf, count, &written, 0);
+                            cut_WIN32_WriteConsoleA(out, buf, count, &written, 0);
                     #elif CUT_TARGET_OS == CUT_LINUX || CUT_TARGET_OS == CUT_MACOS
                         write(1, buf, count);
                     #endif
 
                     count = 0;
-                } else {
-                    param->proc(param, buf, &count);
                 }
+                param->proc(param, buf, &count);
             } else {
+                if (count >= CUT_PRINT_FLUSH_SIZE) {
+                    #if CUT_TARGET_OS == CUT_WINDOWS
+                        if (out && out != cut_WIN32_INVALID_HANDLE_VALUE)
+                            cut_WIN32_WriteConsoleA(out, buf, count, &written, 0);
+                    #elif CUT_TARGET_OS == CUT_LINUX || CUT_TARGET_OS == CUT_MACOS
+                        write(1, buf, count);
+                    #endif
+                    count = 0;
+                }
                 buf[count] = format.data[i];
                 count++;
             }
@@ -177,7 +185,7 @@
         if (count) {
             #if CUT_TARGET_OS == CUT_WINDOWS
                 if (out && out != cut_WIN32_INVALID_HANDLE_VALUE)
-                    WriteConsoleA(out, buf, count, &written, 0);
+                    cut_WIN32_WriteConsoleA(out, buf, count, &written, 0);
             #elif CUT_TARGET_OS == CUT_LINUX || CUT_TARGET_OS == CUT_MACOS
                 write(1, buf, count);
             #endif
@@ -270,49 +278,11 @@
         *index += nb_digits;
     }
 
-    cut_inlinable int cut_format_int_hex_digits_count(cut_s64 nb)
-    {
-        cut_u64 v = nb < 0 ? -(cut_u64)nb : (cut_u64)nb;
-
-        if (v <= 0xF)
-            return 1;
-        else if (v <= 0xFF)
-            return 2;
-        else if (v <= 0xFFF)
-            return 3;
-        else if (v <= 0xFFFF)
-            return 4;
-        else if (v <= 0xFFFFF)
-            return 5;
-        else if (v <= 0xFFFFFF)
-            return 6;
-        else if (v <= 0xFFFFFFF)
-            return 7;
-        else if (v <= 0xFFFFFFFF)
-            return 8;
-        else if (v <= 0xFFFFFFFFF)
-            return 9;
-        else if (v <= 0xFFFFFFFFFF)
-            return 10;
-        else if (v <= 0xFFFFFFFFFFF)
-            return 11;
-        else if (v <= 0xFFFFFFFFFFFF)
-            return 12;
-        else if (v <= 0xFFFFFFFFFFFFF)
-            return 13;
-        else if (v <= 0xFFFFFFFFFFFFFF)
-            return 14;
-        else if (v <= 0xFFFFFFFFFFFFFFF)
-            return 15;
-        else
-            return 16;
-    }
-
     int cut_format_int_hex_count(void *param)
     {
         Cut_Format_Int_Hex *format = (Cut_Format_Int_Hex *)param;
 
-        return cut_format_int_hex_digits_count(format->value) + 2;
+        return 18;
     }
 
     void cut_format_int_hex_proc(void *param, cut_u8 *data, cut_u32 *index)
@@ -328,17 +298,16 @@
             'A', 'B', 'C', 'D', 'E', 'F'
         };
 
-        // @TODO: Do we really need the number of digits here?
-        int nb_digits = cut_format_int_hex_digits_count(format->value);
+        cut_u64 nb = (cut_u64)format->value;
 
         cut_s8 tblindex;
-        for (int i = nb_digits - 1; i >= 0; i--) {
-            tblindex = format->value % 16;
+        for (int i = 15; i >= 0; i--) {
+            tblindex = nb % 16;
             tblindex = tblindex < 0 ? -tblindex : tblindex;
             data[(*index) + i] = tbl[tblindex];
-            format->value /= 16;
+            nb >>= 4;
         }
-        (*index) += nb_digits;
+        (*index) += 16;
     }
 
     int cut_format_str_count(void *param)

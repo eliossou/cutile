@@ -39,7 +39,7 @@
 
         cut_u8 *start;
         cut_u8 *current;
-        cut_u8 *uncommited_start;
+        cut_u8 *uncommitted_start;
         cut_u8 *end;
     } Cut_Virt_Mem;
 
@@ -153,31 +153,38 @@
 
     cut_inlinable int cut_mem_cmp_fast(void *l, void *r, cut_u64 size)
     {
-        cut_u64 *lw = l, *rw = r;
-        cut_u64 n = size / 8;
-        for (cut_u64 i = 0; i < n; i++) {
-            if (lw[i] != rw[i])
-                return 1;
+        if (((cut_uptrsize)l & 7) == 0 && ((cut_uptrsize)r & 7) == 0) {
+            cut_u64 *lw = l, *rw = r;
+            cut_u64 n = size / 8;
+            for (cut_u64 i = 0; i < n; i++) {
+                if (lw[i] != rw[i])
+                    return 1;
+            }
+            cut_u8 *lb = (cut_u8 *)(lw + n), *rb = (cut_u8 *)(rw + n);
+            for (cut_u64 i = n * 8; i < size; i++) {
+                if (*lb != *rb)
+                    return 1;
+                lb++; rb++;
+            }
+            return 0;
         }
-        cut_u8 *lb = (cut_u8 *)(lw + n), *rb = (cut_u8 *)(rw + n);
-        for (cut_u64 i = n * 8; i < size; i++) {
-            if (*lb != *rb)
-                return 1;
-            lb++; rb++;
-        }
-        return 0;
+        return cut_mem_cmp(l, r, size);
     }
 
     cut_inlinable void cut_mem_cpy_fast(void *dest, void *src, cut_u64 size)
     {
-        cut_u64 *d = dest, *s = src;
-        cut_u64 n = size / 8;
-        for (cut_u64 i = 0; i < n; i++)
-            d[i] = s[i];
-        cut_u8 *db = (cut_u8 *)(d + n), *sb = (cut_u8 *)(s + n);
-        for (cut_u64 i = n * 8; i < size; i++) {
-            *db = *sb;
-            db++; sb++;
+        if (((cut_uptrsize)dest & 7) == 0 && ((cut_uptrsize)src & 7) == 0) {
+            cut_u64 *d = dest, *s = src;
+            cut_u64 n = size / 8;
+            for (cut_u64 i = 0; i < n; i++)
+                d[i] = s[i];
+            cut_u8 *db = (cut_u8 *)(d + n), *sb = (cut_u8 *)(s + n);
+            for (cut_u64 i = n * 8; i < size; i++) {
+                *db = *sb;
+                db++; sb++;
+            }
+        } else {
+            cut_mem_cpy(dest, src, size);
         }
     }
 
@@ -205,9 +212,9 @@
 
     cut_inlinable void *cut_mem_clone(void *data, cut_uptrsize size, Cut_Mem_Allocator *allocator)
     {
-        void *new = cut_mem_allocate(size, allocator);
-        cut_mem_cpy(new, data, size);
-        return new;
+        void *cloned = cut_mem_allocate(size, allocator);
+        cut_mem_cpy(cloned, data, size);
+        return cloned;
     }
 
     cut_inlinable cut_u8Arrview cut_u8arrview_clone(cut_u8Arrview view, Cut_Mem_Allocator *allocator)
@@ -276,8 +283,6 @@
                 CUT_WIN32_MEM_RESERVE,
                 CUT_WIN32_PAGE_READWRITE
             );
-            if (!virt->start)
-                return 0;
         }
         #elif CUT_TARGET_OS == CUT_MACOS || CUT_TARGET_OS == CUT_LINUX
         {
@@ -286,10 +291,10 @@
         #endif
 
         virt->current = virt->start;
-        virt->uncommited_start = virt->start;
+        virt->uncommitted_start = virt->start;
         virt->end = (cut_u8 *)virt->start + virt->reserved_size;
 
-        return 1;
+        return virt->start != 0;
     }
 
     void cut_virt_mem_destroy(Cut_Virt_Mem *virt)
@@ -306,25 +311,25 @@
         cut_u8 *result = (cut_u8 *)cut_align_nb((cut_u64)virt->current, virt->alignment);
         cut_u8 *end = result + size;
 
-        if (end > virt->uncommited_start) {
-            if (end > virt->end)   // @TODO: we should check only in debug mode ?
-                return 0;
-
+        if (end > virt->uncommitted_start) {
             cut_u64 size_to_commit;
 
-            size_to_commit = (cut_u64)(end - virt->uncommited_start);
+            size_to_commit = (cut_u64)(end - virt->uncommitted_start);
             size_to_commit = size_to_commit > virt->commit_size ?
                 cut_align_nb(size_to_commit, virt->commit_size) : virt->commit_size;
 
             #if CUT_TARGET_OS == CUT_WINDOWS
-                virt->uncommited_start = cut_WIN32_VirtualAlloc(
-                    virt->uncommited_start,
+            {
+                void *committed = cut_WIN32_VirtualAlloc(
+                    virt->uncommitted_start,
                     size_to_commit,
                     CUT_WIN32_MEM_COMMIT,
                     CUT_WIN32_PAGE_READWRITE
                 );
+                virt->uncommitted_start = committed;
+            }
             #elif CUT_TARGET_OS == CUT_LINUX || CUT_TARGET_OS == CUT_MACOS
-                virt->uncommited_start += size_to_commit;
+                virt->uncommitted_start += size_to_commit;
             #endif
         }
 
@@ -336,13 +341,19 @@
     int cut_virt_mem_reset(Cut_Virt_Mem *virt)
     {
         #if CUT_TARGET_OS == CUT_WINDOWS
+        {
             int res = cut_WIN32_VirtualFree(virt->start, virt->reserved_size, CUT_WIN32_MEM_DECOMMIT);
-            if (!res)
-                return 0;
+        }
+        #elif CUT_TARGET_OS == CUT_LINUX || CUT_TARGET_OS == CUT_MACOS
+        {
+            #if defined(MADV_DONTNEED)
+                madvise(virt->start, virt->reserved_size, MADV_DONTNEED);
+            #endif
+        }
         #endif
 
         virt->current = virt->start;
-        virt->uncommited_start = virt->start;
+        virt->uncommitted_start = virt->start;
 
         return 1;
     }

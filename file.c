@@ -89,7 +89,7 @@
 
             cut_persist cut_u8 path0_buf[CUT_FILE_PATH0_BUF_SIZE+1];
 
-            cut_u32 size = name.count + 1;
+            cut_u64 size = name.count + 1;
             if (size > cut_array_size(path0_buf))
                 return 0;   // Buffer is too short to welcome our path. You can change CUT_FILE_PATH0_BUF_SIZE to a higher value.
 
@@ -118,7 +118,7 @@
                     );
                 }
             } else {
-                out->handle = cut_WIN32_CreateFileA(name0.data, FILE_GENERIC_READ, cut_WIN32_FILE_SHARE_READ, 0, cut_WIN32_OPEN_EXISTING, 0, 0);
+                out->handle = cut_WIN32_CreateFileA(name0.data, cut_WIN32_FILE_GENERIC_READ, cut_WIN32_FILE_SHARE_READ, 0, cut_WIN32_OPEN_EXISTING, 0, 0);
             }
 
             if (out->handle == cut_WIN32_INVALID_HANDLE_VALUE)
@@ -163,7 +163,9 @@
     {
         #if CUT_TARGET_OS == CUT_WINDOWS
         {
-            return cut_WIN32_SetFilePointerEx(file.handle, (LARGE_INTEGER){ .QuadPart = position }, 0, cut_WIN32_FILE_BEGIN);
+            cut_WIN32_LARGE_INTEGER li;
+            li.QuadPart = position;
+            return cut_WIN32_SetFilePointerEx(file.handle, li, 0, cut_WIN32_FILE_BEGIN);
         }
         #elif CUT_TARGET_OS == CUT_LINUX || CUT_TARGET_OS == CUT_MACOS
         {
@@ -178,7 +180,11 @@
     {
         #if CUT_TARGET_OS == CUT_WINDOWS
         {
-            return cut_WIN32_SetFilePointerEx(file.handle, (cut_WIN32_LARGE_INTEGER){ .QuadPart = 0 }, (cut_WIN32_LARGE_INTEGER *)pos, cut_WIN32_FILE_CURRENT);
+            cut_WIN32_LARGE_INTEGER li;
+            if (!cut_WIN32_SetFilePointerEx(file.handle, (cut_WIN32_LARGE_INTEGER){ .QuadPart = 0 }, &li, cut_WIN32_FILE_CURRENT))
+                return 0;
+            *pos = (cut_u64)li.QuadPart;
+            return 1;
         }
         #elif CUT_TARGET_OS == CUT_LINUX || CUT_TARGET_OS == CUT_MACOS
         {
@@ -195,8 +201,10 @@
     {
         #if CUT_TARGET_OS == CUT_WINDOWS
         {
-            if (!cut_WIN32_GetFileSizeEx(file.handle, (cut_WIN32_LARGE_INTEGER *)size))
+            cut_WIN32_LARGE_INTEGER li;
+            if (!cut_WIN32_GetFileSizeEx(file.handle, &li))
                 return 0;
+            *size = (cut_u64)li.QuadPart;
             return 1;
         }
         #elif CUT_TARGET_OS == CUT_LINUX || CUT_TARGET_OS == CUT_MACOS
@@ -339,7 +347,15 @@
         }
         #elif CUT_TARGET_OS == CUT_LINUX || CUT_TARGET_OS == CUT_MACOS
         {
-            return 0;
+            cut_u64 total_write = 0;
+            ssize_t written;
+            while (total_write < data.count) {
+                written = write(file.handle, data.data + total_write, data.count - total_write);
+                if (written == -1)
+                    return 0;
+                total_write += written;
+            }
+            return 1;
         }
         #endif
     }

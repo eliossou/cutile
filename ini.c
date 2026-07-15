@@ -304,9 +304,10 @@
 
                     // '[' has been encountered, let's finish with this section and parse a new one.
                 case cut_ini_parser_token_kind_separator:
+                    cut_u32 content_end_pos = next_tok.start > 0 ? next_tok.start - 1 : 0;
                     if (section.fields.count == 0) // Begin of content equals end of content if there is no field.
-                        section.content_start = next_tok.start - 1;
-                    section.content_end = next_tok.start - 1;
+                        section.content_start = content_end_pos;
+                    section.content_end = content_end_pos;
                     cut_ini_parse_section(&next_tok, state, result);
                     loop = 0;
                     break;
@@ -366,7 +367,7 @@
                 // '[' has been encountered, let's finish with this section and parse a new one.
                 // New section. No more in global section.
                 case cut_ini_parser_token_kind_separator:
-                    result->global_section.content_end = tok.start - 1;
+                    result->global_section.content_end = tok.start > 0 ? tok.start - 1 : 0;
                     cut_ini_parse_section(&tok, state, result);
                     return;
 

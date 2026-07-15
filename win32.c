@@ -40,6 +40,10 @@
         #define cut_WIN32_GetStdHandle GetStdHandle
     #endif
 
+    #if !defined(cut_WIN32_WriteConsoleA)
+        #define cut_WIN32_WriteConsoleA WriteConsoleA
+    #endif
+
     // File API:
 
     #if !defined(cut_WIN32_FILE_GENERIC_READ)
@@ -68,10 +72,6 @@
 
     #if !defined(cut_WIN32_OPEN_EXISTING)
         #define cut_WIN32_OPEN_EXISTING 3
-    #endif
-
-    #if !defined(cut_WIN32_INVALID_HANDLE_VALUE)
-        #define cut_WIN32_INVALID_HANDLE_VALUE ((cut_WIN32_HANDLE)-1)
     #endif
 
     #if !defined(cut_WIN32_CreateFileA)
@@ -106,10 +106,6 @@
         #define cut_WIN32_GetFileSizeEx GetFileSizeEx
     #endif
 
-    #if !defined(cut_WIN32_ReadFile)
-        #define cut_WIN32_ReadFile ReadFile
-    #endif
-
     #if !defined(cut_WIN32_WriteFile)
         #define cut_WIN32_WriteFile WriteFile
     #endif
@@ -128,52 +124,52 @@
         #define cut_WIN32_STACKFRAME64 STACKFRAME64
     #endif
 
-    #if !defined(cut_win32_SYMBOL_INFO)
-        #define cut_win32_SYMBOL_INFO SYMBOL_INFO
+    #if !defined(cut_WIN32_SYMBOL_INFO)
+        #define cut_WIN32_SYMBOL_INFO SYMBOL_INFO
     #endif
 
-    #if !defined(cut_win32_IMAGEHLP_LINE64)
-        #define cut_win32_IMAGEHLP_LINE64 IMAGEHLP_LINE64
+    #if !defined(cut_WIN32_IMAGEHLP_LINE64)
+        #define cut_WIN32_IMAGEHLP_LINE64 IMAGEHLP_LINE64
     #endif
 
-    #if !defined(cut_win32_SymInitialize)
-        #define cut_win32_SymInitialize SymInitialize
+    #if !defined(cut_WIN32_SymInitialize)
+        #define cut_WIN32_SymInitialize SymInitialize
     #endif
 
-    #if !defined(cut_win32_GetCurrentProcess)
-        #define cut_win32_GetCurrentProcess GetCurrentProcess
+    #if !defined(cut_WIN32_GetCurrentProcess)
+        #define cut_WIN32_GetCurrentProcess GetCurrentProcess
     #endif
 
-    #if !defined(cut_win32_GetCurrentThread)
-        #define cut_win32_GetCurrentThread GetCurrentThread
+    #if !defined(cut_WIN32_GetCurrentThread)
+        #define cut_WIN32_GetCurrentThread GetCurrentThread
     #endif
 
-    #if !defined(cut_win32_RtlCaptureContext)
-        #define cut_win32_RtlCaptureContext RtlCaptureContext
+    #if !defined(cut_WIN32_RtlCaptureContext)
+        #define cut_WIN32_RtlCaptureContext RtlCaptureContext
     #endif
 
-    #if !defined(cut_win32_StackWalk)
-        #define cut_win32_StackWalk StackWalk
+    #if !defined(cut_WIN32_StackWalk)
+        #define cut_WIN32_StackWalk StackWalk
     #endif
 
-    #if !defined(cut_win32_IMAGE_FILE_MACHINE_AMD64)
-        #define cut_win32_IMAGE_FILE_MACHINE_AMD64 IMAGE_FILE_MACHINE_AMD64
+    #if !defined(cut_WIN32_IMAGE_FILE_MACHINE_AMD64)
+        #define cut_WIN32_IMAGE_FILE_MACHINE_AMD64 IMAGE_FILE_MACHINE_AMD64
     #endif
 
-    #if !defined(cut_win32_SymFromAddr)
-        #define cut_win32_SymFromAddr SymFromAddr
+    #if !defined(cut_WIN32_SymFromAddr)
+        #define cut_WIN32_SymFromAddr SymFromAddr
     #endif
 
-    #if !defined(cut_win32_SymGetLineFromAddr)
-        #define cut_win32_SymGetLineFromAddr SymGetLineFromAddr
+    #if !defined(cut_WIN32_SymGetLineFromAddr)
+        #define cut_WIN32_SymGetLineFromAddr SymGetLineFromAddr
     #endif
 
-    #if !defined(cut_win32_SymFunctionTableAccess64)
-        #define cut_win32_SymFunctionTableAccess64 SymFunctionTableAccess64
+    #if !defined(cut_WIN32_SymFunctionTableAccess64)
+        #define cut_WIN32_SymFunctionTableAccess64 SymFunctionTableAccess64
     #endif
 
-    #if !defined(cut_win32_SymGetModuleBase64)
-        #define cut_win32_SymGetModuleBase64 SymGetModuleBase64
+    #if !defined(cut_WIN32_SymGetModuleBase64)
+        #define cut_WIN32_SymGetModuleBase64 SymGetModuleBase64
     #endif
 
     // Memory API:
@@ -213,12 +209,14 @@
     // Socket API:
 
     #if !defined(cut_WIN32_WINSOCK2_HEADER)
-        #include <winsock2.h>
+        #define cut_WIN32_WINSOCK2_HEADER <winsock2.h>
     #endif
+    #include cut_WIN32_WINSOCK2_HEADER
 
     #if !defined(cut_WIN32_WS2TCPIP_HEADER)
-        #include <ws2tcpip.h>
+        #define cut_WIN32_WS2TCPIP_HEADER <ws2tcpip.h>
     #endif
+    #include cut_WIN32_WS2TCPIP_HEADER
 
     #if !defined(cut_WIN32_SOCKET)
         #define cut_WIN32_SOCKET SOCKET

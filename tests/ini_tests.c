@@ -1,4 +1,3 @@
-int line = __LINE__;
 #include "../ini.c"
 
 // ct variant is called to have a constant expression.

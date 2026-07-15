@@ -45,7 +45,7 @@
     int cut_stacktrace_api_init()
     {
         #if CUT_TARGET_OS == CUT_WINDOWS
-            if (!cut_win32_SymInitialize(cut_win32_GetCurrentProcess(), 0, 1))
+            if (!cut_WIN32_SymInitialize(cut_WIN32_GetCurrentProcess(), 0, 1))
                 return 0;
         #endif
 
@@ -59,29 +59,47 @@
 
         #if CUT_TARGET_OS == CUT_WINDOWS
         {
-            cut_WIN32_HANDLE current_process = cut_win32_GetCurrentProcess();
-            cut_WIN32_HANDLE current_thread = cut_win32_GetCurrentThread();
+            cut_WIN32_HANDLE current_process = cut_WIN32_GetCurrentProcess();
+            cut_WIN32_HANDLE current_thread = cut_WIN32_GetCurrentThread();
             cut_WIN32_CONTEXT context;
             cut_WIN32_STACKFRAME64 stackframe = {0};
 
-            cut_win32_RtlCaptureContext(&context);
+            cut_WIN32_RtlCaptureContext(&context);
 
-            stackframe.AddrPC.Offset = context.Rip;
+            #if defined(_M_AMD64)
+                stackframe.AddrPC.Offset = context.Rip;
+                stackframe.AddrFrame.Offset = context.Rbp;
+                stackframe.AddrStack.Offset = context.Rsp;
+            #elif defined(_M_IX86)
+                stackframe.AddrPC.Offset = context.Eip;
+                stackframe.AddrFrame.Offset = context.Ebp;
+                stackframe.AddrStack.Offset = context.Esp;
+            #elif defined(_M_ARM64)
+                stackframe.AddrPC.Offset = context.Pc;
+                stackframe.AddrFrame.Offset = context.Fp;
+                stackframe.AddrStack.Offset = context.Sp;
+            #endif
             stackframe.AddrPC.Mode = AddrModeFlat;
-            stackframe.AddrFrame.Offset = context.Rbp;
             stackframe.AddrFrame.Mode = AddrModeFlat;
-            stackframe.AddrStack.Offset = context.Rsp;
             stackframe.AddrStack.Mode = AddrModeFlat;
 
-            while (cut_win32_StackWalk(
-                cut_win32_IMAGE_FILE_MACHINE_AMD64,
+            #if defined(_M_AMD64)
+                #define cut_STACKTRACE_MACHINE_TYPE IMAGE_FILE_MACHINE_AMD64
+            #elif defined(_M_IX86)
+                #define cut_STACKTRACE_MACHINE_TYPE IMAGE_FILE_MACHINE_I386
+            #elif defined(_M_ARM64)
+                #define cut_STACKTRACE_MACHINE_TYPE IMAGE_FILE_MACHINE_ARM64
+            #endif
+
+            while (cut_WIN32_StackWalk(
+                cut_STACKTRACE_MACHINE_TYPE,
                 current_process,
                 current_thread,
                 &stackframe,
                 &context,
                 0,
-                &cut_win32_SymFunctionTableAccess64,
-                &cut_win32_SymGetModuleBase64,
+                &cut_WIN32_SymFunctionTableAccess64,
+                &cut_WIN32_SymGetModuleBase64,
                 0
             )) {
                 if (skip) {
@@ -94,20 +112,26 @@
 
                 Cut_Stacktrace_Frame *frame = frames + *frames_count;
 
-                frame->program_counter = (void*)context.Rip;
+                #if defined(_M_AMD64)
+                    frame->program_counter = (void*)context.Rip;
+                #elif defined(_M_IX86)
+                    frame->program_counter = (void*)context.Eip;
+                #elif defined(_M_ARM64)
+                    frame->program_counter = (void*)context.Pc;
+                #endif
 
                 cut_WIN32_DWORD64           displacement;
                 cut_WIN32_DWORD             line_displacement;
-                cut_u8                      symbol_info_buf[sizeof(cut_win32_SYMBOL_INFO) + sizeof(frame->routine_name)];
-                cut_win32_SYMBOL_INFO*      psymbol_info = (cut_win32_SYMBOL_INFO*)symbol_info_buf;
-                cut_win32_IMAGEHLP_LINE64   line_info;
+                cut_u8                      symbol_info_buf[sizeof(cut_WIN32_SYMBOL_INFO) + sizeof(frame->routine_name)];
+                cut_WIN32_SYMBOL_INFO*      psymbol_info = (cut_WIN32_SYMBOL_INFO*)symbol_info_buf;
+                cut_WIN32_IMAGEHLP_LINE64   line_info;
 
-                psymbol_info->SizeOfStruct = sizeof(cut_win32_SYMBOL_INFO);
+                psymbol_info->SizeOfStruct = sizeof(cut_WIN32_SYMBOL_INFO);
                 psymbol_info->MaxNameLen = sizeof(frame->routine_name);
 
-                line_info.SizeOfStruct = sizeof(cut_win32_IMAGEHLP_LINE64);
+                line_info.SizeOfStruct = sizeof(cut_WIN32_IMAGEHLP_LINE64);
 
-                if (cut_win32_SymFromAddr(
+                if (cut_WIN32_SymFromAddr(
                     current_process,
                     stackframe.AddrPC.Offset,
                     &displacement,
@@ -123,7 +147,7 @@
                     frame->routine_name_length = 0;
                 }
 
-                if (cut_win32_SymGetLineFromAddr(
+                if (cut_WIN32_SymGetLineFromAddr(
                     current_process,
                     stackframe.AddrPC.Offset,
                     &line_displacement,

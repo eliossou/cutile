@@ -38,7 +38,7 @@
         // Microsoft Visual C
         #if defined(_M_AMD64) || defined(_M_ARM64)
             #define CUT_TARGET_PLATFORM_POINTER_SIZE 8
-        #elif (defined(_M_IX86) && _M_IX86 == 600)
+        #elif defined(_M_IX86)
             #define CUT_TARGET_PLATFORM_POINTER_SIZE 4
 
         // GNU C Compiler
@@ -63,7 +63,7 @@
     #endif
 
     #define cut_field_offset(StructureType, FieldName) (cut_uptrsize)(&(((StructureType *)0)->FieldName))
-    #define cut_field_size(StructType, FieldName) sizeof(&(((StructType *)0)->FieldName))
+    #define cut_field_size(StructType, FieldName) sizeof(((StructType *)0)->FieldName)
 
     #if defined(__GNUC__)
         #define cut_packed(Declaration) Declaration __attribute__((__packed__))
@@ -129,7 +129,7 @@
         extern void cut_assert_proc(cut_u8 *msg, cut_u32 msg_len);
 
         #define cut_assert(predicate) {                 \
-            if (predicate) {                            \
+            if (!(predicate)) {                         \
                 cut_u8 msg[] = #predicate;              \
                 cut_assert_proc(msg, sizeof(msg) - 1);  \
             }                                           \
@@ -144,7 +144,7 @@
     }
 
     #define cut_arrview(Array) { .data = Array, .count = cut_array_size(Array) }
-    #define cut_arrview_0(Array0) { .data = Array0, .count = cut_array_size(Array0) - sizeof((Array0)[0]) }
+    #define cut_arrview_0(Array0) { .data = Array0, .count = cut_array_size(Array0) - 1 }
     #define cut_arrview_ptr(DataPtr, Count) { .data = DataPtr, .count = Count }
 
     #define cut_arrview_for(ArrViewPtr, ItDecl, Code) {                                                         \

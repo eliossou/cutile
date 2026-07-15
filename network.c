@@ -120,6 +120,8 @@
 #if !defined(CUT_NETWORK_IMPL_INCLUDED) && (defined(CUT_NETWORK_IMPL) || defined(CUT_IMPL))
     #define CUT_NETWORK_IMPL_INCLUDED
 
+    #include "memory.c"
+
     #if CUT_TARGET_OS == CUT_WINDOWS
         #include "win32.c"
         #include <limits.h>
@@ -129,6 +131,7 @@
         #include <arpa/inet.h>
         #include <fcntl.h>
         #include <limits.h>
+        #include <netinet/in.h>
         #include <sys/socket.h>
         #include <unistd.h>
         typedef socklen_t cut_sockaddr_size;
@@ -162,8 +165,7 @@
                 .sin_family = AF_INET,
                 .sin_port = htons(endpoint.port)
             };
-            for (int i = 0; i < 4; i++)
-                address->sin_addr.s_addr |= ((cut_u32)endpoint.address[i]) << (i * 8);
+            cut_mem_cpy(&address->sin_addr.s_addr, endpoint.address, 4);
             *out_size = sizeof(*address);
             return 1;
         }

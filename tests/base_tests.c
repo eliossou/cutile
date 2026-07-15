@@ -62,4 +62,20 @@ void run_base_tests()
     cut_u8Arrview vf = cut_fstr0("abc");
     test(vf.count == 3);
     test(vf.data[0] == 'a');
+
+    struct test_fields { int a; char b; double c; };
+    test(field_size(struct test_fields, a) == sizeof(int));
+    test(field_size(struct test_fields, b) == sizeof(char));
+    test(field_size(struct test_fields, c) == sizeof(double));
+
+    int int_arr0[] = {10, 20, 30, 0};
+    Arrview(int) int_view0 = arrview_0(int_arr0);
+    test(int_view0.count == 3);
+    test(int_view0.data[0] == 10);
+    test(int_view0.data[2] == 30);
+
+    int int_arr[] = {1, 2, 3};
+    Arrview(int) int_view = arrview(int_arr);
+    test(int_view.count == 3);
+    test(int_view.data[0] == 1);
 }

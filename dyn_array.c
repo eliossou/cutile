@@ -125,7 +125,7 @@
         return cut_dyn_array_at(arr, arr->count - 1);
     }
 
-    cut_inlinable int cut_dyn_array_back_index(Cut_Dyn_Array *arr)
+    cut_inlinable cut_u32 cut_dyn_array_back_index(Cut_Dyn_Array *arr)
     {
         cut_assert(arr->count);
 
