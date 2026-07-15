@@ -121,11 +121,7 @@
     #define CUT_NETWORK_IMPL_INCLUDED
 
     #if CUT_TARGET_OS == CUT_WINDOWS
-        #ifndef WIN32_LEAN_AND_MEAN
-            #define WIN32_LEAN_AND_MEAN
-        #endif
-        #include <winsock2.h>
-        #include <ws2tcpip.h>
+        #include "win32.c"
         #include <limits.h>
         #pragma comment(lib, "Ws2_32.lib")
         typedef int cut_sockaddr_size;
@@ -144,10 +140,10 @@
         {
             cut_persist int initialized;
             if (!initialized) {
-                WSADATA data;
-                int error = WSAStartup(MAKEWORD(2, 2), &data);
+                cut_WIN32_WSADATA data;
+                int error = cut_WIN32_WSAStartup(cut_WIN32_MAKEWORD(2, 2), &data);
                 if (error != 0) {
-                    WSASetLastError(error);
+                    cut_WIN32_WSASetLastError(error);
                     return 0;
                 }
                 initialized = 1;
@@ -234,8 +230,8 @@
         }
 
         #if CUT_TARGET_OS == CUT_WINDOWS
-            SOCKET native_socket = socket(family, type, native_protocol);
-            if (native_socket == INVALID_SOCKET)
+            cut_WIN32_SOCKET native_socket = cut_WIN32_socket(family, type, native_protocol);
+            if (native_socket == cut_WIN32_INVALID_SOCKET)
                 return CUT_INVALID_SOCKET;
         #else
             int native_socket = socket(family, type, native_protocol);
@@ -256,7 +252,7 @@
     void cut_sock_close(Cut_Socket socket)
     {
         #if CUT_TARGET_OS == CUT_WINDOWS
-            closesocket((SOCKET)socket);
+            cut_WIN32_closesocket((cut_WIN32_SOCKET)socket);
         #else
             close((int)socket);
         #endif
@@ -267,7 +263,7 @@
         #if CUT_TARGET_OS == CUT_WINDOWS
         {
             u_long mode = 0;
-            return ioctlsocket((SOCKET)socket, FIONBIO, &mode) == 0;
+            return cut_WIN32_ioctlsocket((cut_WIN32_SOCKET)socket, cut_WIN32_FIONBIO, &mode) == 0;
         }
         #else
         {
@@ -282,7 +278,7 @@
         #if CUT_TARGET_OS == CUT_WINDOWS
         {
             u_long mode = 1;
-            return ioctlsocket((SOCKET)socket, FIONBIO, &mode) == 0;
+            return cut_WIN32_ioctlsocket((cut_WIN32_SOCKET)socket, cut_WIN32_FIONBIO, &mode) == 0;
         }
         #else
         {
@@ -315,7 +311,7 @@
         if (!cut_endpoint_to_sockaddr(endpoint, &address, &address_size))
             return 0;
         #if CUT_TARGET_OS == CUT_WINDOWS
-            return bind((SOCKET)socket, (struct sockaddr *)&address, address_size) == 0;
+            return cut_WIN32_bind((cut_WIN32_SOCKET)socket, (struct sockaddr *)&address, address_size) == 0;
         #else
             return bind((int)socket, (struct sockaddr *)&address, address_size) == 0;
         #endif
@@ -328,7 +324,7 @@
         if (!cut_endpoint_to_sockaddr(endpoint, &address, &address_size))
             return 0;
         #if CUT_TARGET_OS == CUT_WINDOWS
-            return connect((SOCKET)socket, (struct sockaddr *)&address, address_size) == 0;
+            return cut_WIN32_connect((cut_WIN32_SOCKET)socket, (struct sockaddr *)&address, address_size) == 0;
         #else
             return connect((int)socket, (struct sockaddr *)&address, address_size) == 0;
         #endif
@@ -337,7 +333,7 @@
     int cut_sock_listen(Cut_Socket socket, int backlog)
     {
         #if CUT_TARGET_OS == CUT_WINDOWS
-            return listen((SOCKET)socket, backlog) == 0;
+            return cut_WIN32_listen((cut_WIN32_SOCKET)socket, backlog) == 0;
         #else
             return listen((int)socket, backlog) == 0;
         #endif
@@ -351,8 +347,8 @@
         struct sockaddr_storage address = {0};
         cut_sockaddr_size address_size = sizeof(address);
         #if CUT_TARGET_OS == CUT_WINDOWS
-            SOCKET accepted = accept((SOCKET)socket, (struct sockaddr *)&address, &address_size);
-            if (accepted == INVALID_SOCKET)
+            cut_WIN32_SOCKET accepted = cut_WIN32_accept((cut_WIN32_SOCKET)socket, (struct sockaddr *)&address, &address_size);
+            if (accepted == cut_WIN32_INVALID_SOCKET)
                 return 0;
         #else
             int accepted = accept((int)socket, (struct sockaddr *)&address, &address_size);
@@ -363,7 +359,7 @@
         *incoming_socket = (Cut_Socket)accepted;
         if (incoming_endpoint && !cut_endpoint_from_sockaddr(&address, incoming_endpoint)) {
             #if CUT_TARGET_OS == CUT_WINDOWS
-                closesocket(accepted);
+                cut_WIN32_closesocket(accepted);
             #else
                 close(accepted);
             #endif
@@ -377,8 +373,8 @@
         if (!received_size || buf_size > INT_MAX)
             return 0;
         #if CUT_TARGET_OS == CUT_WINDOWS
-            int received = recv((SOCKET)socket, buf, (int)buf_size, 0);
-            if (received == SOCKET_ERROR)
+            int received = cut_WIN32_recv((cut_WIN32_SOCKET)socket, buf, (int)buf_size, 0);
+            if (received == cut_WIN32_SOCKET_ERROR)
                 return 0;
         #else
             int received = (int)recv((int)socket, buf, (size_t)buf_size, 0);
@@ -394,7 +390,7 @@
         if (buf_size > INT_MAX)
             return 0;
         #if CUT_TARGET_OS == CUT_WINDOWS
-            int sent = send((SOCKET)socket, buf, (int)buf_size, 0);
+            int sent = cut_WIN32_send((cut_WIN32_SOCKET)socket, buf, (int)buf_size, 0);
             return sent == (int)buf_size;
         #else
             #if CUT_TARGET_OS == CUT_LINUX

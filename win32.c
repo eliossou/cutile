@@ -209,4 +209,90 @@
     #if !defined(CUT_WIN32_MEM_RELEASE)
         #define CUT_WIN32_MEM_RELEASE 0x00008000
     #endif
+
+    // Socket API:
+
+    #if !defined(cut_WIN32_WINSOCK2_HEADER)
+        #include <winsock2.h>
+    #endif
+
+    #if !defined(cut_WIN32_WS2TCPIP_HEADER)
+        #include <ws2tcpip.h>
+    #endif
+
+    #if !defined(cut_WIN32_SOCKET)
+        #define cut_WIN32_SOCKET SOCKET
+    #endif
+
+    #if !defined(cut_WIN32_WSADATA)
+        #define cut_WIN32_WSADATA WSADATA
+    #endif
+
+    #if !defined(cut_WIN32_INVALID_SOCKET)
+        #define cut_WIN32_INVALID_SOCKET INVALID_SOCKET
+    #endif
+
+    #if !defined(cut_WIN32_SOCKET_ERROR)
+        #define cut_WIN32_SOCKET_ERROR SOCKET_ERROR
+    #endif
+
+    #if !defined(cut_WIN32_FIONBIO)
+        #define cut_WIN32_FIONBIO FIONBIO
+    #endif
+
+    #if !defined(cut_WIN32_WSAStartup)
+        #define cut_WIN32_WSAStartup WSAStartup
+    #endif
+
+    #if !defined(cut_WIN32_WSASetLastError)
+        #define cut_WIN32_WSASetLastError WSASetLastError
+    #endif
+
+    #if !defined(cut_WIN32_WSAGetLastError)
+        #define cut_WIN32_WSAGetLastError WSAGetLastError
+    #endif
+
+    #if !defined(cut_WIN32_MAKEWORD)
+        #define cut_WIN32_MAKEWORD MAKEWORD
+    #endif
+
+    #if !defined(cut_WIN32_socket)
+        #define cut_WIN32_socket socket
+    #endif
+
+    #if !defined(cut_WIN32_closesocket)
+        #define cut_WIN32_closesocket closesocket
+    #endif
+
+    #if !defined(cut_WIN32_ioctlsocket)
+        #define cut_WIN32_ioctlsocket ioctlsocket
+    #endif
+
+    #if !defined(cut_WIN32_bind)
+        #define cut_WIN32_bind bind
+    #endif
+
+    #if !defined(cut_WIN32_connect)
+        #define cut_WIN32_connect connect
+    #endif
+
+    #if !defined(cut_WIN32_listen)
+        #define cut_WIN32_listen listen
+    #endif
+
+    #if !defined(cut_WIN32_accept)
+        #define cut_WIN32_accept accept
+    #endif
+
+    #if !defined(cut_WIN32_recv)
+        #define cut_WIN32_recv recv
+    #endif
+
+    #if !defined(cut_WIN32_send)
+        #define cut_WIN32_send send
+    #endif
+
+    #if !defined(cut_WIN32_inet_pton)
+        #define cut_WIN32_inet_pton inet_pton
+    #endif
 #endif
