@@ -127,6 +127,7 @@
         #include <winsock2.h>
         #include <ws2tcpip.h>
         #include <limits.h>
+        #pragma comment(lib, "Ws2_32.lib")
         typedef int cut_sockaddr_size;
     #elif CUT_TARGET_OS == CUT_LINUX || CUT_TARGET_OS == CUT_MACOS
         #include <arpa/inet.h>
