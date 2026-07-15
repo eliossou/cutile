@@ -99,6 +99,8 @@
             #define CUT_TARGET_OS CUT_WINDOWS
         #elif defined(__MACH__)
             #define CUT_TARGET_OS CUT_MACOS
+        #elif defined(__linux__)
+            #define CUT_TARGET_OS CUT_LINUX
         #endif
     #endif
 

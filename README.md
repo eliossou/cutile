@@ -25,6 +25,7 @@ Short names (e.g., `mem_cpy` instead of `cut_mem_cpy`) are available by defining
 | **Dyn Array** | `dyn_array.c` | Generic dynamic array with element-level growth, back-insertion, iteration, removal |
 | **Hash Table** | `hash_table.c` | Open-addressing hash table with FNV-32 hashing, linear probing, support for custom key types |
 | **File** | `file.c` | Cross-platform file I/O: open/close, read/write, file size, entire-file reading (Windows via `CreateFile`, Linux/macOS via POSIX) |
+| **Network** | `network.c` | Cross-platform IPv4/IPv6 TCP and UDP sockets: open/close, blocking mode, endpoints, bind/connect/listen/accept, send/receive |
 | **INI** | `ini.c` | INI file parser with section/field tokenizer, global and section-scoped value lookups |
 | **UTF-8** | `utf8.c` | UTF-8 character length, codepoint decoding, string-length in characters, iteration macro |
 | **Stacktrace** | `stacktrace.c` | Cross-platform stack trace capture (requires platform-specific init) |

@@ -31,6 +31,7 @@ int failed_tests = 0;
 #include "ini_tests.c"
 #include "memory_tests.c"
 #include "memory_debug_tests.c"
+#include "network_tests.c"
 #include "print_tests.c"
 #include "stacktrace_tests.c"
 #include "str_tests.c"
@@ -75,6 +76,7 @@ int main()
     run_ini_tests();
     run_memory_tests();
     run_memory_debug_tests();
+    run_network_tests();
     run_print_tests();
     run_stacktrace_tests();
     run_str_tests();
