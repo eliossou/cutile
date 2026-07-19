@@ -303,7 +303,7 @@
                     break;
 
                     // '[' has been encountered, let's finish with this section and parse a new one.
-                case cut_ini_parser_token_kind_separator:
+                case cut_ini_parser_token_kind_separator: {
                     cut_u32 content_end_pos = next_tok.start > 0 ? next_tok.start - 1 : 0;
                     if (section.fields.count == 0) // Begin of content equals end of content if there is no field.
                         section.content_start = content_end_pos;
@@ -311,6 +311,7 @@
                     cut_ini_parse_section(&next_tok, state, result);
                     loop = 0;
                     break;
+                }
 
                 case cut_ini_parser_token_kind_end:
                     section.content_end = state->index;
