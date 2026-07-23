@@ -20,6 +20,9 @@
     // Faster version of cut_mem_cpy that copies memory in 64-bit words.
     cut_inlinable void cut_mem_cpy_fast(void *dest, void *src, cut_u64 size);
 
+    // Faster version of cut_mem_set that fills memory in 64-bit words.
+    cut_inlinable void cut_mem_set_fast(void *dest, cut_u8 val, cut_u64 size);
+
     cut_inlinable void cut_mem_set(void *dest, cut_u8 val, cut_u64 size);
 
     typedef struct Cut_Fixed_Buffer_Mem {
@@ -93,6 +96,7 @@
         #define arrview_is_same cut_arrview_is_same
         #define mem_cpy(dest, src, size) cut_mem_cpy(dest, src, size)
         #define mem_cpy_fast(dest, src, size) cut_mem_cpy_fast(dest, src, size)
+        #define mem_set_fast(DestPtr, Val, Size) cut_mem_set_fast(DestPtr, Val, Size)
         #define mem_set(DestPtr, Val, Size) cut_mem_set(DestPtr, Val, Size)
 
         typedef Cut_Mem_Allocator Mem_Allocator;
@@ -185,6 +189,27 @@
             }
         } else {
             cut_mem_cpy(dest, src, size);
+        }
+    }
+
+    cut_inlinable void cut_mem_set_fast(void *dest, cut_u8 val, cut_u64 size)
+    {
+        if (((cut_uptrsize)dest & 7) == 0) {
+            cut_u64 *d = dest;
+            cut_u64 word = val;
+            word |= word << 8;
+            word |= word << 16;
+            word |= word << 32;
+            cut_u64 n = size / 8;
+            for (cut_u64 i = 0; i < n; i++)
+                d[i] = word;
+            cut_u8 *db = (cut_u8 *)(d + n);
+            for (cut_u64 i = n * 8; i < size; i++) {
+                *db = val;
+                db++;
+            }
+        } else {
+            cut_mem_set(dest, val, size);
         }
     }
 

@@ -69,4 +69,37 @@ void run_memory_tests()
         mem_cpy_fast(dst4, src, 0);
         test(dst4[0] == 0);
     }
+
+    // mem_set_fast
+    {
+        u8 buf[20];
+        mem_set_fast(buf, 0xAB, 20);
+        for (cut_u64 i = 0; i < 20; i++)
+            test(buf[i] == 0xAB);
+
+        // Aligned boundary (exactly 8 bytes)
+        u8 buf2[8] = {0};
+        mem_set_fast(buf2, 0xFF, 8);
+        for (cut_u64 i = 0; i < 8; i++)
+            test(buf2[i] == 0xFF);
+
+        // Less than 8 bytes
+        u8 buf3[3] = {0};
+        mem_set_fast(buf3, 0x42, 3);
+        for (cut_u64 i = 0; i < 3; i++)
+            test(buf3[i] == 0x42);
+
+        // Zero bytes — nothing changes
+        u8 buf4[4] = {0xAA, 0xBB, 0xCC, 0xDD};
+        mem_set_fast(buf4, 0x00, 0);
+        test(buf4[0] == 0xAA && buf4[1] == 0xBB && buf4[2] == 0xCC && buf4[3] == 0xDD);
+
+        // Unaligned destination
+        u8 buf5[17] = {0};
+        mem_set_fast(buf5+1, 0x55, 15);
+        test(buf5[0] == 0);
+        for (cut_u64 i = 1; i < 16; i++)
+            test(buf5[i] == 0x55);
+        test(buf5[16] == 0);
+    }
 }
