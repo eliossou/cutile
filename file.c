@@ -35,6 +35,10 @@
     int cut_get_file_size_named(cut_u8Arrview name, cut_u64 *size);
     int cut_get_file_size_named_0(cut_u8Arrview name0, cut_u64 *size);
 
+    int cut_read_file(Cut_File file, cut_u64 size, cut_u8Arrview *out, Cut_Mem_Allocator *mem_allocator);
+    // "out" is a pre-allocated buffer. It needs to have enough memory to store the whole file content.
+    int cut_read_file2(Cut_File file, cut_u64 size, cut_u8Arrview *out);
+
     int cut_read_entire_file(Cut_File file, cut_u8Arrview *out, Cut_Mem_Allocator *mem_allocator);
     // "name" size must not be superior than CUT_FILE_PATH0_BUF_SIZE.
     int cut_read_entire_file_named(cut_u8arrview name, cut_u8Arrview *out, Cut_Mem_Allocator *mem_allocator);
@@ -59,6 +63,9 @@
         #define get_file_size           cut_get_file_size
         #define get_file_size_named     cut_get_file_size_named
         #define get_file_size_named_0   cut_get_file_size_named_0
+
+        #define read_file   cut_read_file
+        #define read_file2  cut_read_file2
 
         #define read_entire_file            cut_read_entire_file
         #define read_entire_file_named      cut_read_entire_file_named
@@ -254,52 +261,80 @@
         return get_size_success;
     }
 
+    int cut_read_file(Cut_File file, cut_u64 size, cut_u8Arrview *out, Cut_Mem_Allocator *mem_allocator)
+    {
+        out->data = cut_mem_allocate(sizeof(cut_u8) * size, mem_allocator);
+        if (!cut_read_file2(file, size, out)) {
+            cut_mem_free(out->data, mem_allocator);
+            return 0;
+        }
+        return 1;
+    }
+
+    int cut_read_file2(Cut_File file, cut_u64 size, cut_u8Arrview *out)
+    {
+        #if CUT_TARGET_OS == CUT_WINDOWS
+        {
+            cut_u64 total_read = 0;
+            cut_u32 read;
+            while (total_read < size) {
+                if (!cut_WIN32_ReadFile(file.handle, out->data + total_read, size - total_read, &read, 0))
+                    return 0;
+                total_read += read;
+            }
+            out->count = total_read;
+        }
+        #elif CUT_TARGET_OS == CUT_LINUX || CUT_TARGET_OS == CUT_MACOS
+        {
+            cut_u64 total_read = 0;
+            ssize_t rd;
+            while (total_read < size) {
+                rd = read(file.handle, out->data + total_read, size - total_read);
+                if (rd == -1)
+                    return 0;
+                total_read += rd;
+            }
+            out->count = total_read;
+        }
+        #endif
+
+        return 1;
+    }
+
+    static inline int cut_read_entire_file_(Cut_File file, cut_u8Arrview *out, cut_u64 file_size)
+    {
+        cut_u64 prev_pos;
+        if (!cut_get_file_position(file, &prev_pos))
+            return 0;
+
+        int res = cut_read_file2(file, file_size, out);
+
+        cut_set_file_position(file, prev_pos);
+
+        return res;
+    }
+
     int cut_read_entire_file(Cut_File file, cut_u8arrview *out, Cut_Mem_Allocator *mem_allocator)
     {
         cut_u64 file_size;
         if (!cut_get_file_size(file, &file_size))
             return 0;
 
-        cut_u64 prev_pos;
-        if (!cut_get_file_position(file, &prev_pos))
-            return 0;
-
         out->data = cut_mem_allocate(sizeof(cut_u8) * file_size, mem_allocator);
-
-        #if CUT_TARGET_OS == CUT_WINDOWS
-        {
-            cut_u64 total_read = 0;
-            cut_u32 read;
-            while (total_read < file_size) {
-                if (!cut_WIN32_ReadFile(file.handle, out->data + total_read, file_size - total_read, &read, 0)) {
-                    cut_mem_free(out->data, mem_allocator);
-                    return 0;
-                }
-                total_read += read;
-            }
-
-            out->count = total_read;
-
-            return 1;
+        if (!cut_read_entire_file_(file, out, file_size)) {
+            cut_mem_free(out->data, mem_allocator);
+            return 0;
         }
-        #elif CUT_TARGET_OS == CUT_LINUX || CUT_TARGET_OS == CUT_MACOS
-        {
-            cut_u64 total_read = 0;
-            ssize_t rd;
-            while (total_read < file_size) {
-                rd = read(file.handle, out->data + total_read, file_size - total_read);
-                if (rd == -1) {
-                    cut_mem_free(out->data, mem_allocator);
-                    return 0;
-                }
-                total_read += rd;
-            }
 
-            out->count = total_read;
+        return 1;
+    }
 
-            return 1;
-        }
-        #endif
+    int cut_read_entire_file2(Cut_File file, cut_u8Arrview *out)
+    {
+        cut_u64 file_size;
+        if (!cut_get_file_size(file, &file_size))
+            return 0;
+        return cut_read_entire_file_(file, out, file_size);
     }
 
     int cut_read_entire_file_named(cut_u8arrview name, cut_u8arrview *out, Cut_Mem_Allocator *mem_allocator)
