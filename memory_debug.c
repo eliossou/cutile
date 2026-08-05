@@ -32,6 +32,15 @@
         Cut_Mem_Allocator mem_allocator;
     } Cut_Mem_Allocator_Debugger;
 
+    cut_inlinable Cut_Mem_Allocator_Debugger cut_mem_allocator_debugger_create(Cut_Mem_Allocator to_debug_allocator, Cut_Mem_Allocator mem_allocator);
+
+    void *cut_mem_allocator_debugger_allocate(cut_uptrsize size, void *allocator_data);
+    void cut_mem_allocator_debugger_free(void *ptr, void *allocator_data);
+
+    Cut_Dyn_Array(Cut_u8Arrview) cut_mem_allocator_debugger_report_generate(Cut_Mem_Allocator_Debugger *, Cut_Mem_Allocator);
+    void                         cut_mem_allocator_debugger_report_destroy(Cut_Dyn_Array(Cut_u8Arrview) *report);
+
+
     cut_inlinable Cut_Mem_Allocator_Debugger cut_mem_allocator_debugger_create(Cut_Mem_Allocator to_debug_allocator, Cut_Mem_Allocator mem_allocator)
     {
         Cut_Mem_Allocator_Debugger r = {
@@ -44,12 +53,6 @@
 
         return r;
     }
-
-    void *cut_mem_allocator_debugger_allocate(cut_uptrsize size, void *allocator_data);
-    void cut_mem_allocator_debugger_free(void *ptr, void *allocator_data);
-
-    Cut_Dyn_Array(cut_u8Arrview) cut_mem_allocator_debugger_report_generate(Cut_Mem_Allocator_Debugger *, Cut_Mem_Allocator);
-    void                         cut_mem_allocator_debugger_report_destroy(Cut_Dyn_Array(cut_u8Arrview) *report);
 #endif
 
 #if !defined(CUT_MEMORY_DEBUG_IMPL_INCLUDED) && (defined(CUT_MEMORY_DEBUG_IMPL) || defined(CUT_IMPL))
@@ -106,11 +109,11 @@
     {
         #ifdef CUT_MEMORY_DEBUG_STACKTRACE
         {
-            cut_u8Arrview str;
+            Cut_u8Arrview str;
             for (int i = 0; i < alloc_info->frames_count; i++) {
                 Cut_Stacktrace_Frame *fr = alloc_info->frames + i;
-                cut_u8Arrview routine_name = cut_u8arrview_ptr(fr->routine_name, fr->routine_name_length);
-                cut_u8Arrview filename = cut_u8arrview_ptr(fr->filename, fr->filename_length);
+                Cut_u8Arrview routine_name = cut_u8arrview_ptr(fr->routine_name, fr->routine_name_length);
+                Cut_u8Arrview filename = cut_u8arrview_ptr(fr->filename, fr->filename_length);
                 str = cut_sprint(
                     &mem_allocator,
                     cut_fstr0("    at %(%) (%:%).\n"),
@@ -125,10 +128,10 @@
         #endif
     }
 
-    Cut_Dyn_Array(cut_u8Arrview) cut_mem_allocator_debugger_report_generate(Cut_Mem_Allocator_Debugger *debugger, Cut_Mem_Allocator mem_allocator)
+    Cut_Dyn_Array(Cut_u8Arrview) cut_mem_allocator_debugger_report_generate(Cut_Mem_Allocator_Debugger *debugger, Cut_Mem_Allocator mem_allocator)
     {
-        Cut_Dyn_Array report = cut_dyn_array(sizeof(cut_u8Arrview), debugger->allocated.count, mem_allocator);
-        cut_u8Arrview str;
+        Cut_Dyn_Array report = cut_dyn_array(sizeof(Cut_u8Arrview), debugger->allocated.count, mem_allocator);
+        Cut_u8Arrview str;
 
         cut_hash_table_for(&debugger->allocated, void *key, Cut_Mem_Allocation_Info *alloc_info, {
             str = cut_sprint(
@@ -170,9 +173,9 @@
         return report;
     }
 
-    void cut_mem_allocator_debugger_report_destroy(Cut_Dyn_Array(cut_u8Arrview) *report)
+    void cut_mem_allocator_debugger_report_destroy(Cut_Dyn_Array(Cut_u8Arrview) *report)
     {
-        cut_dyn_array_for(report, cut_u8Arrview *it, {
+        cut_dyn_array_for(report, Cut_u8Arrview *it, {
             cut_mem_free(it->data, &report->mem_allocator);
         });
         cut_dyn_array_deinit(report);

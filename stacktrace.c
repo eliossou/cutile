@@ -19,8 +19,8 @@
     int cut_stacktrace(Cut_Stacktrace_Frame *frames, int *frames_count, int max_frames_count, int skip);
 
     #ifdef CUT_SHORT_NAMES
-        #define stacktrace_api_init() cut_stacktrace_api_init()
-        #define stacktrace(frames, frames_count, max_frames_count, skip) cut_stacktrace(frames, frames_count, max_frames_count, skip)
+        #define stacktrace_api_init cut_stacktrace_api_init
+        #define stacktrace cut_stacktrace
 
         typedef Cut_Stacktrace_Frame Stacktrace_Frame;
     #endif
@@ -141,7 +141,7 @@
                         frame->routine_name_length = sizeof(frame->routine_name);
                     else
                         frame->routine_name_length = psymbol_info->NameLen;
-                    cut_mem_cpy(frame->routine_name, psymbol_info->Name, frame->routine_name_length);
+                    memcpy(frame->routine_name, psymbol_info->Name, frame->routine_name_length);
                 }
                 else {
                     frame->routine_name_length = 0;

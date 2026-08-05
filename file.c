@@ -22,8 +22,8 @@
     #endif
 
     // "name" size must not be superior than CUT_FILE_PATH0_BUF_SIZE.
-    int cut_open_file(Cut_File *out, cut_u8Arrview name, int writable, int keep_content);
-    int cut_open_file_0(Cut_File *out, cut_u8Arrview name0, int writable, int keep_content);
+    int cut_open_file(Cut_File *out, Cut_u8Arrview name, int writable, int keep_content);
+    int cut_open_file_0(Cut_File *out, Cut_u8Arrview name0, int writable, int keep_content);
 
     void cut_close_file(Cut_File file);
 
@@ -32,19 +32,21 @@
 
     int cut_get_file_size(Cut_File file, cut_u64 *size);
     // "name" size must not be superior than CUT_FILE_PATH0_BUF_SIZE.
-    int cut_get_file_size_named(cut_u8Arrview name, cut_u64 *size);
-    int cut_get_file_size_named_0(cut_u8Arrview name0, cut_u64 *size);
+    int cut_get_file_size_named(Cut_u8Arrview name, cut_u64 *size);
+    int cut_get_file_size_named_0(Cut_u8Arrview name0, cut_u64 *size);
 
-    int cut_read_file(Cut_File file, cut_u64 size, cut_u8Arrview *out, Cut_Mem_Allocator *mem_allocator);
+    int cut_read_file(Cut_File file, cut_u64 size, Cut_u8Arrview *out, Cut_Mem_Allocator *mem_allocator);
     // "out" is a pre-allocated buffer. It needs to have enough memory to store the whole file content.
-    int cut_read_file2(Cut_File file, cut_u64 size, cut_u8Arrview *out);
+    int cut_read_file2(Cut_File file, cut_u64 size, Cut_u8Arrview *out);
 
-    int cut_read_entire_file(Cut_File file, cut_u8Arrview *out, Cut_Mem_Allocator *mem_allocator);
+    int cut_read_entire_file(Cut_File file, Cut_u8Arrview *out, Cut_Mem_Allocator *mem_allocator);
     // "name" size must not be superior than CUT_FILE_PATH0_BUF_SIZE.
-    int cut_read_entire_file_named(cut_u8arrview name, cut_u8Arrview *out, Cut_Mem_Allocator *mem_allocator);
-    int cut_read_entire_file_named_0(cut_u8arrview name0, cut_u8Arrview *out, Cut_Mem_Allocator *mem_allocator);
+    int cut_read_entire_file_named(Cut_u8Arrview name, Cut_u8Arrview *out, Cut_Mem_Allocator *mem_allocator);
+    int cut_read_entire_file_named_0(Cut_u8Arrview name0, Cut_u8Arrview *out, Cut_Mem_Allocator *mem_allocator);
 
+    // The file cursor position advances by the given data size each time you write.
     int cut_write_file(Cut_File file, Cut_u8Arrview data);
+    int cut_write_file2(Cut_File file, cut_u8 *data, cut_uptrsize len);
     // "name" size must not be superior than CUT_FILE_PATH0_BUF_SIZE.
     int cut_write_file_named(Cut_u8Arrview name, Cut_u8Arrview data);
     int cut_write_file_named_0(Cut_u8Arrview name0, Cut_u8Arrview data);
@@ -72,6 +74,7 @@
         #define read_entire_file_named_0    cut_read_entire_file_named_0
 
         #define write_file         cut_write_file
+        #define write_file2        cut_write_file2
         #define write_file_named   cut_write_file_named
         #define write_file_named_0 cut_write_file_named_0
     #endif
@@ -85,7 +88,7 @@
         #include <fcntl.h>
     #endif
 
-    int cut_open_file(Cut_File *out, cut_u8arrview name, int writable, int keep_content)
+    int cut_open_file(Cut_File *out, Cut_u8Arrview name, int writable, int keep_content)
     {
         #if CUT_TARGET_OS == CUT_MACOS || CUT_TARGET_OS == CUT_LINUX || CUT_TARGET_OS == CUT_WINDOWS
         {
@@ -100,7 +103,7 @@
             if (size > cut_array_size(path0_buf))
                 return 0;   // Buffer is too short to welcome our path. You can change CUT_FILE_PATH0_BUF_SIZE to a higher value.
 
-            cut_mem_cpy(path0_buf, name.data, name.count);
+            memcpy(path0_buf, name.data, name.count);
             path0_buf[name.count] = '\0';
 
             return cut_open_file_0(out, cut_u8arrview_ptr(path0_buf, size), writable, keep_content);
@@ -108,7 +111,7 @@
         #endif
     }
 
-    int cut_open_file_0(Cut_File *out, cut_u8arrview name0, int writable, int keep_content)
+    int cut_open_file_0(Cut_File *out, Cut_u8Arrview name0, int writable, int keep_content)
     {
         #if CUT_TARGET_OS == CUT_WINDOWS
         {
@@ -233,7 +236,7 @@
         #endif
     }
 
-    int cut_get_file_size_named(cut_u8arrview name, cut_u64 *size)
+    int cut_get_file_size_named(Cut_u8Arrview name, cut_u64 *size)
     {
         Cut_File file;
 
@@ -247,7 +250,7 @@
         return get_size_success;
     }
 
-    int cut_get_file_size_named_0(cut_u8arrview name0, cut_u64 *size)
+    int cut_get_file_size_named_0(Cut_u8Arrview name0, cut_u64 *size)
     {
         Cut_File file;
 
@@ -261,7 +264,7 @@
         return get_size_success;
     }
 
-    int cut_read_file(Cut_File file, cut_u64 size, cut_u8Arrview *out, Cut_Mem_Allocator *mem_allocator)
+    int cut_read_file(Cut_File file, cut_u64 size, Cut_u8Arrview *out, Cut_Mem_Allocator *mem_allocator)
     {
         out->data = cut_mem_allocate(sizeof(cut_u8) * size, mem_allocator);
         if (!cut_read_file2(file, size, out)) {
@@ -271,7 +274,7 @@
         return 1;
     }
 
-    int cut_read_file2(Cut_File file, cut_u64 size, cut_u8Arrview *out)
+    int cut_read_file2(Cut_File file, cut_u64 size, Cut_u8Arrview *out)
     {
         #if CUT_TARGET_OS == CUT_WINDOWS
         {
@@ -301,7 +304,7 @@
         return 1;
     }
 
-    static inline int cut_read_entire_file_(Cut_File file, cut_u8Arrview *out, cut_u64 file_size)
+    static inline int cut_read_entire_file_(Cut_File file, Cut_u8Arrview *out, cut_u64 file_size)
     {
         cut_u64 prev_pos;
         if (!cut_get_file_position(file, &prev_pos))
@@ -314,7 +317,7 @@
         return res;
     }
 
-    int cut_read_entire_file(Cut_File file, cut_u8arrview *out, Cut_Mem_Allocator *mem_allocator)
+    int cut_read_entire_file(Cut_File file, Cut_u8Arrview *out, Cut_Mem_Allocator *mem_allocator)
     {
         cut_u64 file_size;
         if (!cut_get_file_size(file, &file_size))
@@ -329,7 +332,7 @@
         return 1;
     }
 
-    int cut_read_entire_file2(Cut_File file, cut_u8Arrview *out)
+    int cut_read_entire_file2(Cut_File file, Cut_u8Arrview *out)
     {
         cut_u64 file_size;
         if (!cut_get_file_size(file, &file_size))
@@ -337,7 +340,7 @@
         return cut_read_entire_file_(file, out, file_size);
     }
 
-    int cut_read_entire_file_named(cut_u8arrview name, cut_u8arrview *out, Cut_Mem_Allocator *mem_allocator)
+    int cut_read_entire_file_named(Cut_u8Arrview name, Cut_u8Arrview *out, Cut_Mem_Allocator *mem_allocator)
     {
         Cut_File file;
 
@@ -351,7 +354,7 @@
         return read_success;
     }
 
-    int cut_read_entire_file_named_0(cut_u8arrview name0, cut_u8arrview *out, Cut_Mem_Allocator *mem_allocator)
+    int cut_read_entire_file_named_0(Cut_u8Arrview name0, Cut_u8Arrview *out, Cut_Mem_Allocator *mem_allocator)
     {
         Cut_File file;
 
@@ -393,6 +396,11 @@
             return 1;
         }
         #endif
+    }
+
+    int cut_write_file2(Cut_File file, cut_u8 *data, cut_uptrsize len)
+    {
+        return cut_write_file(file, (Cut_u8Arrview){data, len});
     }
 
     int cut_write_file_named(Cut_u8Arrview name, Cut_u8Arrview data)

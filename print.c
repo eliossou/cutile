@@ -5,17 +5,18 @@
     #include "base.c"
     #include "memory.c"
 
-    cut_u8Arrview cut_sprint_v(Cut_Mem_Allocator *, cut_u8Arrview format, va_list args);
-    cut_u8Arrview cut_sprint(Cut_Mem_Allocator *, cut_u8Arrview format, ...);
+    Cut_u8Arrview cut_sprint_v(Cut_Mem_Allocator *, Cut_u8Arrview format, va_list args);
+    Cut_u8Arrview cut_sprint(Cut_Mem_Allocator *, Cut_u8Arrview format, ...);
 
     #ifndef CUT_PRINT_FLUSH_SIZE
         #define CUT_PRINT_FLUSH_SIZE 128
     #endif
 
-    void cut_print_v(cut_u8Arrview format, va_list args);
-    void cut_print(cut_u8Arrview format, ...);
+    void cut_print_v(Cut_u8Arrview format, va_list args);
+    void cut_print(Cut_u8Arrview format, ...);
 
     #define cut_print2(Array0Format, ...) cut_print(cut_fstr0(Array0Format), ## __VA_ARGS__)
+    #define cut_print3(Array0Format) cut_print(cut_fstr0(Array0Format))
 
     #define cut_format_int(Integer) &(Cut_Format_Int){ cut_format_int_count, cut_format_int_proc, Integer }
     #define cut_format_int_hex(Integer) &(Cut_Format_Int_Hex){ cut_format_int_hex_count, cut_format_int_hex_proc, Integer }
@@ -48,7 +49,7 @@
     typedef struct Cut_Format_Str {
         Cut_Formatter formatter;
 
-        cut_u8Arrview str;
+        Cut_u8Arrview str;
     } Cut_Format_Str;
 
     int cut_format_str0_count(void *param);
@@ -60,12 +61,13 @@
     } Cut_Format_Str0;
 
     #if defined(CUT_PRINT_SHORT_NAMES) || defined(CUT_SHORT_NAMES)
-        #define sprint_v(...) cut_sprint_v(__VA_ARGS__);
-        #define sprint(...)   cut_sprint(__VA_ARGS__);
+        #define sprint_v    cut_sprint_v
+        #define sprint      cut_sprint
 
-        #define print_v(...) cut_print_v(__VA_ARGS__)
-        #define print(...)   cut_print(__VA_ARGS__)
-        #define print2       cut_print2
+        #define print_v cut_print_v
+        #define print   cut_print
+        #define print2  cut_print2
+        #define print3  cut_print3
 
         typedef Cut_Formatter Formatter;
 
@@ -86,7 +88,7 @@
         #include <unistd.h>
     #endif
 
-    cut_u8Arrview cut_sprint_v(Cut_Mem_Allocator *mem_allocator, cut_u8Arrview format, va_list args)
+    Cut_u8Arrview cut_sprint_v(Cut_Mem_Allocator *mem_allocator, Cut_u8Arrview format, va_list args)
     {
         va_list args2;
         va_copy(args2, args);
@@ -104,7 +106,7 @@
             }
         }
 
-        cut_u8Arrview result = {
+        Cut_u8Arrview result = {
             .data = cut_mem_allocate(count * sizeof(cut_u8), mem_allocator),
             .count = count
         };
@@ -125,19 +127,19 @@
         return result;
     }
 
-    cut_u8Arrview cut_sprint(Cut_Mem_Allocator *mem_allocator, cut_u8Arrview format, ...)
+    Cut_u8Arrview cut_sprint(Cut_Mem_Allocator *mem_allocator, Cut_u8Arrview format, ...)
     {
         va_list args;
         va_start(args, format);
 
-        cut_u8Arrview result = cut_sprint_v(mem_allocator, format, args);
+        Cut_u8Arrview result = cut_sprint_v(mem_allocator, format, args);
 
         va_end(args);
 
         return result;
     }
 
-    void cut_print_v(cut_u8Arrview format, va_list args)
+    void cut_print_v(Cut_u8Arrview format, va_list args)
     {
         persist cut_u8 buf[CUT_PRINT_FLUSH_SIZE];
         cut_u32 i = 0;
@@ -194,7 +196,7 @@
         return;
     }
 
-    void cut_print(cut_u8Arrview format, ...)
+    void cut_print(Cut_u8Arrview format, ...)
     {
         va_list args;
         va_start(args, format);
@@ -321,7 +323,7 @@
     {
         Cut_Format_Str *format = (Cut_Format_Str *)param;
 
-        cut_mem_cpy(data + *index, format->str.data, format->str.count);
+        memcpy(data + *index, format->str.data, format->str.count);
 
         *index += format->str.count;
     }

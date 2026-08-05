@@ -33,37 +33,6 @@
         Cut_Endpoint endpoint;
     } Cut_Ipv6_Endpoint;
 
-    /*
-        Failure handling:
-
-        Except for cut_sock_open, a network operation returning 0 has failed.
-        Read the platform error immediately, before another networking or system call:
-        - Windows: WSAGetLastError() (declared by <winsock2.h>).
-        - Linux/macOS: errno (declared by <errno.h>).
-
-        This applies to cut_sock_blocking, cut_sock_non_blocking, cut_sock_bind,
-        cut_sock_connect, cut_sock_listen, cut_sock_accept, cut_sock_receive, and
-        cut_sock_send. They use, respectively, ioctlsocket/fcntl, bind, connect,
-        listen, accept, recv, and send. Consult the native error documentation for
-        the operation that failed. EWOULDBLOCK/EAGAIN (or WSAEWOULDBLOCK) is expected
-        when a non-blocking operation cannot proceed yet.
-
-        cut_sock_open returns CUT_INVALID_SOCKET on failure. Read WSAGetLastError()
-        on Windows or errno on Linux/macOS. A Windows WSAStartup failure is also made
-        available through WSAGetLastError().
-
-        An invalid string passed to cut_ipv4_from_str or cut_ipv6_from_str produces an
-        endpoint whose kind is CUT_SOCK_KIND_NONE. This is not a socket error. Likewise,
-        invalid arguments rejected by cutile (unsupported kind/protocol, invalid endpoint,
-        null required output pointer, or a buffer larger than INT_MAX) have no meaningful
-        native error code.
-
-        On a successful cut_sock_receive, a received size of 0 means a TCP peer closed
-        the connection cleanly; it is not a failure. cut_sock_close intentionally discards
-        close errors. cut_sock_send returns 0 after a partial send, for which the native
-        error code is not reliable; use a blocking socket when the whole buffer is required.
-    */
-
     // Returns CUT_INVALID_SOCKET when the socket could not be opened.
     Cut_Socket cut_sock_open(Cut_Sock_Kind kind, Cut_Sock_Protocol protocol);
     void cut_sock_close(Cut_Socket socket);
@@ -81,9 +50,9 @@
     int cut_sock_accept(Cut_Socket socket, Cut_Socket *incoming_socket, Cut_Endpoint *incoming_endpoint);
 
     // A successful receive may report zero bytes when a stream peer has closed its connection.
-    int cut_sock_receive(Cut_Socket socket, void *buf, cut_u64 buf_size, cut_u64 *received_size);
+    int cut_sock_receive(Cut_Socket socket, void *buf, cut_uptrsize buf_size, cut_uptrsize *received_size);
     // Sends the whole buffer. A partial send is reported as failure.
-    int cut_sock_send(Cut_Socket socket, void *buf, cut_u64 buf_size);
+    int cut_sock_send(Cut_Socket socket, void *buf, cut_uptrsize buf_size);
 
     #if defined(CUT_NETWORK_SHORT_NAMES) || defined(CUT_SHORT_NAMES)
         typedef Cut_Socket Socket;
@@ -165,7 +134,7 @@
                 .sin_family = AF_INET,
                 .sin_port = htons(endpoint.port)
             };
-            cut_mem_cpy(&address->sin_addr.s_addr, endpoint.address, 4);
+            memcpy(&address->sin_addr.s_addr, endpoint.address, 4);
             *out_size = sizeof(*address);
             return 1;
         }
@@ -370,7 +339,7 @@
         return 1;
     }
 
-    int cut_sock_receive(Cut_Socket socket, void *buf, cut_u64 buf_size, cut_u64 *received_size)
+    int cut_sock_receive(Cut_Socket socket, void *buf, cut_uptrsize buf_size, cut_uptrsize *received_size)
     {
         if (!received_size || buf_size > INT_MAX)
             return 0;
@@ -383,11 +352,11 @@
             if (received < 0)
                 return 0;
         #endif
-        *received_size = (cut_u64)received;
+        *received_size = (cut_uptrsize)received;
         return 1;
     }
 
-    int cut_sock_send(Cut_Socket socket, void *buf, cut_u64 buf_size)
+    int cut_sock_send(Cut_Socket socket, void *buf, cut_uptrsize buf_size)
     {
         if (buf_size > INT_MAX)
             return 0;

@@ -10,7 +10,7 @@ void run_str_tests()
     test(!cut_str0_eq("abc", "abd"));
     test(!cut_str0_eq("abc", "ab"));
 
-    cut_u8Arrview v = cut_str0v("hello");
+    Cut_u8Arrview v = cut_str0v("hello");
     test(v.count == 5);
     test(v.data[0] == 'h');
     test(v.data[4] == 'o');

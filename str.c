@@ -25,9 +25,9 @@
         }
     }
 
-    cut_inlinable cut_u8Arrview cut_str0v(void *s)
+    cut_inlinable Cut_u8Arrview cut_str0v(void *s)
     {
-        cut_u8Arrview view = {
+        Cut_u8Arrview view = {
             .data = s,
             .count = cut_str0_len(s)
         };

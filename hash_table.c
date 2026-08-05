@@ -40,7 +40,6 @@
         cut_u32 capacity;
     } Cut_Hash_Table;
 
-    // Just used as an hint to know what the hash table is supposed to contain.
     #define Cut_Hash_Table(TKey, TValue) Cut_Hash_Table
 
     #define cut_hash_table(HashProc, KeysSameProc, KeySize, ValueSize, MemAllocator)  \
@@ -52,7 +51,7 @@
     #define cut_hash_table_default_u8arrview(ValueSize, MemAllocator)               \
         (Cut_Hash_Table) {                                                          \
             cut_hash_table_hash_u8arrview, cut_hash_table_keys_are_same_u8arrview,  \
-            sizeof(u8arrview), ValueSize, MemAllocator                              \
+            sizeof(Cut_u8Arrview), ValueSize, MemAllocator                          \
         }
 
     Cut_Hash_Table_Hash cut_hash_table_hash(void *key, cut_u64 key_size);
@@ -73,11 +72,10 @@
     // Instead it will just try to find the first index available, making your hash table now having twice the same key.
     // So please, make sure all your keys are unique beforehand.
     // If you really need to know if your key is already present you can just use hash_table_get.
-    // This choice has been made for performance reason, I do not want to compare the keys when adding new elements because in most
-    // cases I do not deal with potential duplicates.
+    // I do not want my program to compare the keys when adding new elements because in most cases I do not deal with potential duplicates.
     void *cut_hash_table_add(Cut_Hash_Table *ht, void *key_ptr, void *value_ptr);
     void *cut_hash_table_add_empty(Cut_Hash_Table *ht, void *key_ptr);
-    // This function resizes the hash table if needed. "threshold_factor" is the percent of occupied slots before resizing occurs. 75% is good.
+    // This function resizes the hash table if needed. "threshold_factor" is the percent of occupied slots before resizing occurs. 75% seems a good value in most cases.
     void *cut_hash_table_add_resize_factor(Cut_Hash_Table *ht, void *key_ptr, void *value_ptr, cut_u8 threshold_factor, cut_u32 increment);
 
     int cut_hash_table_remove(Cut_Hash_Table *ht, void *key);
@@ -86,16 +84,28 @@
     void *cut_hash_table_get(Cut_Hash_Table *ht, void *key);    // Returns a pointer to the stored value.
     void *cut_hash_table_get_kv(Cut_Hash_Table *ht, void *key); // Returns a pointer to the key-value pair.
 
-    // Exposed because it is used by cut_hash_table_for.
-    Cut_Hash_Table_Element *cut_hash_table_get_element_at(Cut_Hash_Table *ht, cut_u32 index);
-
     void cut_hash_table_resize(Cut_Hash_Table *ht, cut_u32 new_capacity);
+
+    // Functions you probably do not need:
 
     cut_inlinable cut_u64 cut_hash_table_get_element_size(Cut_Hash_Table *ht)
     {
         cut_assert(ht->key_size);
         cut_assert(ht->value_size);
         return sizeof(struct Cut_Hash_Table_Element) + ht->key_size + ht->value_size;
+    }
+
+    cut_inlinable cut_u64 cut_hash_table_get_element_u8_position(Cut_Hash_Table *ht, cut_u32 index)
+    {
+        cut_u64 elem_size = cut_hash_table_get_element_size(ht);
+
+        return index * elem_size;
+    }
+
+    cut_inlinable Cut_Hash_Table_Element *cut_hash_table_get_element_at(Cut_Hash_Table *ht, cut_u32 index)
+    {
+        return (struct Cut_Hash_Table_Element *)
+            (ht->elements_u8 + cut_hash_table_get_element_u8_position(ht, index));
     }
 
     cut_inlinable cut_u8 cut_hash_table_fill_factor(Cut_Hash_Table *ht)
@@ -176,34 +186,21 @@
 
     Cut_Hash_Table_Hash cut_hash_table_hash_u8arrview(void *key, cut_u64 key_size)
     {
-        cut_u8arrview *v = (cut_u8arrview *)key;
+        Cut_u8Arrview *v = (Cut_u8Arrview *)key;
         return cut_hash_table_hash(v->data, v->count);
     }
 
     int cut_hash_table_keys_are_same(void *key, void *other_key, cut_u64 key_size)
     {
-        return cut_mem_is_same(key, other_key, key_size);
+        return !memcmp(key, other_key, key_size);
     }
 
     int cut_hash_table_keys_are_same_u8arrview(void *key, void *other_key, cut_u64 key_size)
     {
-        cut_u8arrview *l = (cut_u8arrview *)key;
-        cut_u8arrview *r = (cut_u8arrview *)other_key;
+        Cut_u8Arrview *l = (Cut_u8Arrview *)key;
+        Cut_u8Arrview *r = (Cut_u8Arrview *)other_key;
 
-        return l->count == r->count && cut_mem_is_same(l->data, r->data, l->count);
-    }
-
-    cut_inlinable cut_u64 cut_hash_table_get_element_u8_position(Cut_Hash_Table *ht, cut_u32 index)
-    {
-        cut_u64 elem_size = cut_hash_table_get_element_size(ht);
-
-        return index * elem_size;
-    }
-
-    Cut_Hash_Table_Element *cut_hash_table_get_element_at(Cut_Hash_Table *ht, cut_u32 index)
-    {
-        return (struct Cut_Hash_Table_Element *)
-            (ht->elements_u8 + cut_hash_table_get_element_u8_position(ht, index));
+        return l->count == r->count && !memcmp(l->data, r->data, l->count);
     }
 
     void cut_hash_table_init(Cut_Hash_Table *ht, cut_u32 init_capacity)
@@ -281,14 +278,7 @@
     void *cut_hash_table_add(Cut_Hash_Table *ht, void *key, void *value)
     {
         void *dest = cut_hash_table_add_empty(ht, key);
-
-        // Copies value.
-        cut_mem_cpy(
-            dest,
-            value,
-            ht->value_size
-        );
-
+        memcpy(dest, value, ht->value_size);
         return dest;
     }
 
@@ -303,11 +293,7 @@
 
         // Copies key.
         cut_u8 *dest = element->kv;
-        cut_mem_cpy(
-            dest,
-            key,
-            ht->key_size
-        );
+        memcpy(dest, key, ht->key_size);
 
         dest += ht->key_size;
 

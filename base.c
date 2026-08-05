@@ -58,8 +58,6 @@
     #elif CUT_TARGET_PLATFORM_POINTER_SIZE == 4
         typedef cut_u32 cut_uptrsize;
         typedef cut_s32 cut_sptrsize;
-    #else
-        cut_ct_assert(0, "Unknown platform pointer size.")
     #endif
 
     #define cut_field_offset(StructureType, FieldName) (cut_uptrsize)(&(((StructureType *)0)->FieldName))
@@ -71,9 +69,13 @@
         #define cut_packed(Declaration) __pragma(pack(push, 1)) Declaration __pragma(pack(pop))
     #endif
 
-    #define cut_alignas(AlignmentOrType) _Alignas(AlignmentOrType)
+    #define cut_alignas(positive_pow2_or_type) _Alignas(positive_pow2_or_type)
 
-    #define cut_inlinable static inline
+    #if defined(_MSC_VER)
+        #define cut_inlinable __forceinline
+    #elif defined(__GNUC__) || defined(__clang__)
+        #define cut_inlinable __attribute__((always_inline)) inline
+    #endif
 
     cut_inlinable int cut_is_cpu_big_endian()
     {
@@ -104,7 +106,7 @@
         #endif
     #endif
 
-    cut_inlinable cut_u64 cut_align_nb(cut_u64 v, cut_u64 a)
+    cut_inlinable cut_uptrsize cut_align_nb(cut_uptrsize v, cut_uptrsize a)
     {
         return (v + (a - 1)) & ~(a - 1);
     }
@@ -124,15 +126,21 @@
     // Compile-time assertion.
     #define cut_ct_assert(expr, msg) _Static_assert(expr, msg)
 
-    #if defined(CUT_ENABLE_ASSERT)
-        // To define yourself in your own program.
-        extern void cut_assert_proc(cut_u8 *msg, cut_u32 msg_len);
+    #if defined(CUT_ENABLE_ASSERT) || defined(CUT_DEBUG) || defined(DEBUG)
+        #ifdef CUT_ASSERT_HANDLER
+            // To define yourself in your own program.
+            extern void cut_assert_handler(cut_u8 *msg, cut_u32 msg_len);
 
-        #define cut_assert(predicate) {                 \
-            if (!(predicate)) {                         \
-                cut_u8 msg[] = #predicate;              \
-                cut_assert_proc(msg, sizeof(msg) - 1);  \
-            }                                           \
+            #define CUT_ASSERT__CALL_HANDLER(...) cut_assert_handler(__VA_ARGS__)
+        #else
+            #define CUT_ASSERT__CALL_HANDLER(...)
+        #endif
+
+        #define cut_assert(predicate) {                         \
+            if (!(predicate)) {                                 \
+                cut_u8 msg[] = #predicate;                      \
+                CUT_ASSERT__CALL_HANDLER(msg, sizeof(msg) - 1); \
+            }                                                   \
         }
     #else
         #define cut_assert(predicate) (void)0
@@ -140,7 +148,7 @@
 
     #define Cut_Arrview(Type) struct {  \
         Type *data;                     \
-        cut_u64 count;                  \
+        cut_uptrsize count;             \
     }
 
     #define cut_arrview(Array) { .data = Array, .count = cut_array_size(Array) }
@@ -148,48 +156,17 @@
     #define cut_arrview_ptr(DataPtr, Count) { .data = DataPtr, .count = Count }
 
     #define cut_arrview_for(ArrViewPtr, ItDecl, Code) {                                                         \
-        for (cut_u64 cut__arrview_for_i = 0; cut__arrview_for_i < (ArrViewPtr)->count; cut__arrview_for_i++) {  \
+        for (cut_uptrsize cut__arrview_for_i = 0; cut__arrview_for_i < (ArrViewPtr)->count; cut__arrview_for_i++) {  \
             ItDecl = (ArrViewPtr)->data + cut__arrview_for_i;                                                   \
             Code;                                                                                               \
         }                                                                                                       \
     }
 
-    typedef Cut_Arrview(cut_u8) cut_u8arrview;  // @TODO: Replace by Cut_u8Arrview
-    typedef cut_u8arrview cut_u8Arrview;        // @REMOVE
-    typedef cut_u8arrview Cut_u8Arrview;
+    typedef Cut_Arrview(cut_u8) Cut_u8Arrview;
 
     #define cut_u8arrview(Array) (Cut_u8Arrview){ Array, cut_array_size(Array) }
     #define cut_u8arrview_0(Array0) (Cut_u8Arrview){ Array0, cut_array_size(Array0) - 1 }
-    #define cut_u8arrview_ptr(DataPtr, Count) (cut_u8arrview){ DataPtr, Count }
-
-    // Makes a Cut_u8Arrview from a pointer to an 0 terminated u8 array.
-    cut_inlinable Cut_u8Arrview cut_u8arrview_0p(void *p)
-    {
-        Cut_u8Arrview result = {
-            .data = p
-        };
-
-        cut_u8 *p2 = p;
-        while (p2[result.count]) {
-            result.count++;
-        }
-
-        return result;
-    }
-
-    cut_inlinable int cut_u8arrview_eq(Cut_u8Arrview *l, Cut_u8Arrview *r)
-    {
-        if (l->count != r->count)
-            return 0;
-
-        // @SPEED
-        for (cut_u32 i = 0; i < l->count; i++) {
-            if (l->data[i] != r->data[i])
-                return 0;
-        }
-
-        return 1;
-    }
+    #define cut_u8arrview_ptr(DataPtr, Count) (Cut_u8Arrview){ DataPtr, Count }
 
     // Makes an array view of a known-size string ending with a 0.
     #define cut_fstr0_ct(FStr0) { .data = (cut_u8 *)FStr0, .count = sizeof(FStr0) - 1 }
@@ -258,15 +235,11 @@
 
         #define arrview_for cut_arrview_for
 
-        typedef cut_u8arrview u8arrview; // @TODO: Remove
-        typedef cut_u8Arrview u8Arrview;
+        typedef Cut_u8Arrview u8Arrview;
 
         #define u8arrview     cut_u8arrview
         #define u8arrview_0   cut_u8arrview_0
         #define u8arrview_ptr cut_u8arrview_ptr
-        #define u8arrview_0p  cut_u8arrview_0p
-
-        #define u8arrview_eq cut_u8arrview_eq
 
         #define fstr0_ct cut_fstr0_ct
         #define fstr0    cut_fstr0

@@ -2,7 +2,7 @@
 
 void run_hash_table_tests()
 {
-    Hash_Table(u8arrview, int) ht = hash_table_default_u8arrview(
+    Hash_Table(u8Arrview, int) ht = hash_table_default_u8arrview(
         .value_size = sizeof(int),
         .mem_allocator = memallocator
     );

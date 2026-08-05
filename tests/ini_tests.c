@@ -1,7 +1,7 @@
 #include "../ini.c"
 
 // ct variant is called to have a constant expression.
-u8arrview ini_data = fstr0_ct(
+u8Arrview ini_data = fstr0_ct(
     "Global=50\n"
     "[SECTION]\n"
     "ABC=23\n"

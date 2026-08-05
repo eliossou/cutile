@@ -1,4 +1,4 @@
-// Supports single-line comments using ';' character: whole line after ';' is skipped.
+// Supports single-line comments using ';' character.
 
 #ifndef CUT_INI
     #define CUT_INI
@@ -30,7 +30,7 @@
     } Cut_Ini_Section;
 
     typedef struct Cut_Ini_Error {
-        cut_u8arrview msg;
+        Cut_u8Arrview msg;
         cut_u32 line;
     } Cut_Ini_Error;
 
@@ -46,7 +46,7 @@
         Cut_Ini_Error   error;
         Cut_Ini_Section global_section;
 
-        cut_u8arrview ini_data;
+        Cut_u8Arrview ini_data;
 
         struct {
             cut_u32 count;
@@ -58,7 +58,7 @@
         Cut_Mem_Allocator mem_allocator;
     } Cut_Parse_Ini_Result;
 
-    Cut_Parse_Ini_Result cut_ini_parse(cut_u8arrview ini_data, Cut_Mem_Allocator mem_allocator);
+    Cut_Parse_Ini_Result cut_ini_parse(Cut_u8Arrview ini_data, Cut_Mem_Allocator mem_allocator);
 
     void cut_ini_destroy_parsed_data(Cut_Parse_Ini_Result *parse_ini_result);
 
@@ -68,11 +68,11 @@
         cut_u32 value_size;
     } Cut_Ini_Get_Entry_Result;
 
-    Cut_Ini_Get_Entry_Result cut_ini_get_global_entry_value(Cut_Parse_Ini_Result *parse_ini_result, cut_u8arrview entry_name);
-    Cut_Ini_Get_Entry_Result cut_ini_get_entry_value(Cut_Parse_Ini_Result *parse_ini_result, cut_u8arrview section_name, cut_u8arrview entry_name);
+    Cut_Ini_Get_Entry_Result cut_ini_get_global_entry_value(Cut_Parse_Ini_Result *parse_ini_result, Cut_u8Arrview entry_name);
+    Cut_Ini_Get_Entry_Result cut_ini_get_entry_value(Cut_Parse_Ini_Result *parse_ini_result, Cut_u8Arrview section_name, Cut_u8Arrview entry_name);
 
-    int cut_ini_get_field(cut_u8arrview ini_data, cut_u8arrview section_name, cut_u8arrview entry_name, Cut_Ini_Field *out);
-    int cut_ini_get_global_field(cut_u8arrview ini_data, cut_u8arrview entry_name, Cut_Ini_Field *out);
+    int cut_ini_get_field(Cut_u8Arrview ini_data, Cut_u8Arrview section_name, Cut_u8Arrview entry_name, Cut_Ini_Field *out);
+    int cut_ini_get_global_field(Cut_u8Arrview ini_data, Cut_u8Arrview entry_name, Cut_Ini_Field *out);
 
     #if defined(CUT_INI_SHORT_NAMES) || defined(CUT_SHORT_NAMES)
         #define Ini_Field Cut_Ini_Field
@@ -389,7 +389,7 @@
         }
     }
 
-    Cut_Parse_Ini_Result cut_ini_parse(cut_u8arrview data, Cut_Mem_Allocator mem_allocator)
+    Cut_Parse_Ini_Result cut_ini_parse(Cut_u8Arrview data, Cut_Mem_Allocator mem_allocator)
     {
         Cut_Parse_Ini_Result result;
         result.mem_allocator = mem_allocator;
@@ -423,7 +423,7 @@
         cut_mem_free(parsed_data->sections.data, &parsed_data->mem_allocator);
     }
 
-    Cut_Ini_Get_Entry_Result cut_ini_get_section_entry_value(Cut_Parse_Ini_Result *parsed_data, Cut_Ini_Section *section, cut_u8arrview entry_name)
+    Cut_Ini_Get_Entry_Result cut_ini_get_section_entry_value(Cut_Parse_Ini_Result *parsed_data, Cut_Ini_Section *section, Cut_u8Arrview entry_name)
     {
         Cut_Ini_Get_Entry_Result result;
         result.found = 0;
@@ -433,7 +433,7 @@
 
             if (field->name_end - field->name_start + 1 != entry_name.count)
                 continue;
-            if (cut_mem_cmp(entry_name.data, parsed_data->ini_data.data + field->name_start, entry_name.count))
+            if (memcmp(entry_name.data, parsed_data->ini_data.data + field->name_start, entry_name.count))
                 continue;
 
             result.found = 1;
@@ -445,12 +445,12 @@
         return result;
     }
 
-    Cut_Ini_Get_Entry_Result cut_ini_get_global_entry_value(Cut_Parse_Ini_Result *parsed_data, cut_u8arrview entry_name)
+    Cut_Ini_Get_Entry_Result cut_ini_get_global_entry_value(Cut_Parse_Ini_Result *parsed_data, Cut_u8Arrview entry_name)
     {
         return cut_ini_get_section_entry_value(parsed_data, &parsed_data->global_section, entry_name);
     }
 
-    Cut_Ini_Get_Entry_Result cut_ini_get_entry_value(Cut_Parse_Ini_Result *parsed_data, cut_u8arrview section_name, cut_u8arrview entry_name)
+    Cut_Ini_Get_Entry_Result cut_ini_get_entry_value(Cut_Parse_Ini_Result *parsed_data, Cut_u8Arrview section_name, Cut_u8Arrview entry_name)
     {
         for (cut_u32 i = 0; i < parsed_data->sections.count; i++) {
             Cut_Ini_Section *section = &parsed_data->sections.data[i];
@@ -458,7 +458,7 @@
             if (section->name_size != section_name.count)
                 continue;
 
-            if (cut_mem_cmp(section_name.data, parsed_data->ini_data.data + section->name, section->name_size))
+            if (memcmp(section_name.data, parsed_data->ini_data.data + section->name, section->name_size))
                 continue;
 
             // SECTION FOUND!
@@ -470,7 +470,7 @@
         return result;
     }
 
-    int cut_ini_get_field(cut_u8arrview ini_data, cut_u8arrview section_name, cut_u8arrview entry_name, Cut_Ini_Field *out)
+    int cut_ini_get_field(Cut_u8Arrview ini_data, Cut_u8Arrview section_name, Cut_u8Arrview entry_name, Cut_Ini_Field *out)
     {
         Cut_Ini_Parser_State state = {
             ini_data.data, ini_data.count, 0, 1
@@ -491,7 +491,7 @@
                         if (section_name.count != tok.end - tok.start + 1)
                             continue;
 
-                        if (!cut_mem_cmp(section_name.data, ini_data.data + tok.start, section_name.count))
+                        if (!memcmp(section_name.data, ini_data.data + tok.start, section_name.count))
                             break;
                     }
                 }
@@ -508,7 +508,7 @@
                 if (entry_name.count != tok.end - tok.start + 1)
                     continue; // Entry name size does not match so we already know it's not the good one.
 
-                if (!cut_mem_cmp(entry_name.data, ini_data.data + tok.start, entry_name.count)) {
+                if (!memcmp(entry_name.data, ini_data.data + tok.start, entry_name.count)) {
                     out->name_start = tok.start;
                     out->name_end = tok.end;
                     tok = cut_ini_parser_get_next_token(&state);
@@ -530,8 +530,8 @@
         return 0;
     }
 
-    int cut_ini_get_global_field(cut_u8arrview ini_data, cut_u8arrview entry_name, Cut_Ini_Field *out)
+    int cut_ini_get_global_field(Cut_u8Arrview ini_data, Cut_u8Arrview entry_name, Cut_Ini_Field *out)
     {
-        return cut_ini_get_field(ini_data, (cut_u8arrview){0,0}, entry_name, out);
+        return cut_ini_get_field(ini_data, (Cut_u8Arrview){0,0}, entry_name, out);
     }
 #endif

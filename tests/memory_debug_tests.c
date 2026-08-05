@@ -29,7 +29,7 @@ void run_memory_debug_tests()
     // 3 for bad allocatior operations + 2 for total allocated/total freed + unknown number for the stacktrace. So at least 5.
     test(report.count >= 5);
 
-    cut_dyn_array_for(&report, cut_u8Arrview *it, {
+    cut_dyn_array_for(&report, Cut_u8Arrview *it, {
         cut_print(*it);
     });
 

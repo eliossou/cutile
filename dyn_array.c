@@ -18,7 +18,6 @@
         void *data;
     } Cut_Dyn_Array;
 
-    // Just used as an hint to know which element type should be stored inside the array.
     #define Cut_Dyn_Array(T) Cut_Dyn_Array
 
     #define cut_dyn_array(ElemSize, Increment, MemAllocator)   \
@@ -88,7 +87,7 @@
     cut_inlinable void *cut_dyn_array_add_back(Cut_Dyn_Array *arr, void *val)
     {
         void *data = cut_dyn_array_add_back_empty(arr);
-        cut_mem_cpy(data, val, arr->element_size);  // @TODO: cut_mem_cpy is slow.
+        memcpy(data, val, arr->element_size);  // @TODO: cut_mem_cpy is slow.
         return data;
     }
 
@@ -106,7 +105,7 @@
     {
         void *result = cut_dyn_array_add_back_many_empty(arr, count);
 
-        cut_mem_cpy(result, vals, arr->element_size * count);
+        memcpy(result, vals, arr->element_size * count);
 
         return result;
     }
@@ -135,7 +134,7 @@
     cut_inlinable void cut_dyn_array_set_all(Cut_Dyn_Array *arr, void *val)
     {
         for (cut_u32 i = 0; i < arr->count; i++) {
-            cut_mem_cpy((cut_u8 *)arr->data + (i * arr->element_size), val, arr->element_size);
+            memcpy((cut_u8 *)arr->data + (i * arr->element_size), val, arr->element_size);
         }
     }
 
@@ -157,7 +156,7 @@
         cut_assert(arr->count > index);
 
         cut_u32 to_copy = arr->count - index - 1;
-        cut_mem_cpy(
+        memcpy(
             (cut_u8 *)arr->data + (index * arr->element_size),
             (cut_u8 *)arr->data + ((index + 1) * arr->element_size),
             arr->element_size * to_copy

@@ -44,22 +44,22 @@ void run_base_tests()
     Cut_u8Arrview v2 = cut_u8arrview(a2);
     Cut_u8Arrview v3 = cut_u8arrview(a3);
     Cut_u8Arrview v4 = cut_u8arrview_ptr(a1, 2);
-    test(cut_u8arrview_eq(&v1, &v2));
-    test(!cut_u8arrview_eq(&v1, &v3));
-    test(!cut_u8arrview_eq(&v1, &v4));
+    test(cut_arrview_is_same(&v1, &v2));
+    test(!cut_arrview_is_same(&v1, &v3));
+    test(!cut_arrview_is_same(&v1, &v4));
 
     // u8arrview_0p
-    cut_u8Arrview v0 = cut_u8arrview_0p("hello");
+    Cut_u8Arrview v0 = cut_u8arrview_0("hello");
     test(v0.count == 5);
     test(v0.data[0] == 'h');
 
     // u8arrview_0
     cut_u8 hello[] = "hello";
-    cut_u8Arrview v0b = cut_u8arrview_0(hello);
+    Cut_u8Arrview v0b = cut_u8arrview_0(hello);
     test(v0b.count == 5);
 
     // fstr0
-    cut_u8Arrview vf = cut_fstr0("abc");
+    Cut_u8Arrview vf = cut_fstr0("abc");
     test(vf.count == 3);
     test(vf.data[0] == 'a');
 

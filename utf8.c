@@ -37,7 +37,7 @@
     } Cut_Utf8_Str_Iterator;
 
     // UTF-8 string iteration.
-    // u8arrviewStr: the string to iterate, represented in a cut_u8Arrview.
+    // u8arrviewStr: the string to iterate, represented in a Cut_u8Arrview.
     // Utf8StrItName: the name of the iterator you can read in the given code.
     // Code: your code.
     #define cut_utf8_str_for(u8ArrviewStr, Utf8StrItName, Code)
@@ -55,7 +55,7 @@
 #ifndef CUT_UTF8_INL_IMPL
     #define CUT_UTF8_INL_IMPL
 
-    /* Here are some rules from the RFC regarding bytes sequences in an UTF-8 string:
+    /* Regarding bytes sequences in an UTF-8 string:
 
         https://www.rfc-editor.org/rfc/rfc3629#section-4
 
@@ -107,7 +107,7 @@
         return (((cut_s32)c[0] & 0x07) << 18) | (((cut_s32)c[1] & 0x3F) << 12) | (((cut_s32)c[2] & 0x3F) << 6) | (c[3] & 0x3F);
     }
 
-    cut_inlinable int cut_utf8_str_len(cut_u8Arrview str)
+    cut_inlinable int cut_utf8_str_len(Cut_u8Arrview str)
     {
         cut_u32 count = 0;
         cut_u32 i = 0;

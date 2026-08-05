@@ -52,18 +52,18 @@ void *resize_nothing(uptrsize size, void *old, uptrsize old_size, void *unused)
 
 int main()
 {
-    Virt_Mem virt = {
+    Arena arena = {
         .reserved_size = 64 * 1024 * 1024, // 64 MB
         .commit_size = 4096,
         .alignment = 8
     };
 
-    memallocator.data = &virt;
-    memallocator.allocate = cut_virt_mem_allocate;
+    memallocator.data = &arena;
+    memallocator.allocate = cut_arena_allocate;
     memallocator.free = free_nothing;
     memallocator.resize = resize_nothing;
 
-    virt_mem_init(&virt);
+    arena_init(&arena);
 
     print(fstr0("Running tests...\n"));
 

@@ -1,7 +1,4 @@
-// Example: Capturing and printing a stacktrace using cutile's stacktrace API.
-//
-// Compile on Windows with MSVC: cl example_stacktrace.c /link Dbghelp.lib
-// Compile on Windows with MinGW: gcc example_stacktrace.c -ldbghelp -o example_stacktrace.exe
+// Capturing and printing a stacktrace using cutile's stacktrace API.
 
 #define CUT_IMPL
 #define CUT_SHORT_NAMES
