@@ -21,9 +21,7 @@
 
         typedef __INT64_TYPE__          cut_s64;
         typedef unsigned __INT64_TYPE__ cut_u64;
-    #endif
-
-    #ifdef _MSC_VER
+    #elif defined(_MSC_VER)
         typedef __int32          cut_s32;
         typedef unsigned __int32 cut_u32;
 
@@ -63,13 +61,24 @@
     #define cut_field_offset(StructureType, FieldName) (cut_uptrsize)(&(((StructureType *)0)->FieldName))
     #define cut_field_size(StructType, FieldName) sizeof(((StructType *)0)->FieldName)
 
-    #if defined(__GNUC__)
+    #if defined(__clang__) || defined(__GNUC__)
         #define cut_packed(Declaration) Declaration __attribute__((__packed__))
     #elif defined(_MSC_VER)
         #define cut_packed(Declaration) __pragma(pack(push, 1)) Declaration __pragma(pack(pop))
     #endif
 
-    #define cut_alignas(positive_pow2_or_type) _Alignas(positive_pow2_or_type)
+    #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 202311L
+        #define cut_alignas(PositivePowOf2OrType) alignas(PositivePowOf2OrType)
+    #else
+        #define cut_alignas(PositivePowOf2OrType) _Alignas(PositivePowOf2OrType)
+    #endif
+
+    // Compiler alignas.
+    #if defined(__clang__) || defined(__GNUC__)
+        #define cut_cc_alignas(PositivePowOf2) __atribute__((aligned(PositivePowOf2)))
+    #elif defined(_MSC_VER)
+        #define cut_cc_alignas(PositivePowOf2) __declspec(align(PositivePowOf2))
+    #endif
 
     #if defined(_MSC_VER)
         #define cut_inlinable __forceinline
@@ -125,6 +134,7 @@
 
     // Compile-time assertion.
     #define cut_ct_assert(expr, msg) _Static_assert(expr, msg)
+    #define cut_ct_assert_(expr) _Static_assert(expr, "Unsatisfied condition: "#expr)
 
     #if defined(CUT_ENABLE_ASSERT) || defined(CUT_DEBUG) || defined(DEBUG)
         #ifdef CUT_ASSERT_HANDLER
@@ -206,7 +216,8 @@
 
         #define packed cut_packed
 
-        #define alignas cut_alignas
+        #define alignas     cut_alignas
+        #define cc_alignas  cut_cc_alignas
 
         #define inlinable cut_inlinable
 
@@ -224,7 +235,8 @@
         #define C11_SUPPORTED CUT_C11_SUPPORTED
         #define C23_SUPPORTED CUT_C23_SUPPORTED
 
-        #define ct_assert cut_ct_assert
+        #define ct_assert   cut_ct_assert
+        #define ct_assert_  cut_ct_assert_
 
         #define assert cut_assert
 
