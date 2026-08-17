@@ -30,6 +30,7 @@ Short names (e.g., `Arena` instead of `Cut_Arena`) are available by defining `CU
 | **UTF-8** | `utf8.c` | UTF-8 character length, codepoint decoding, string-length in characters, iteration macro |
 | **Stacktrace** | `stacktrace.c` | Cross-platform stack trace capture |
 | **Memory Debug** | `memory_debug.c` | Debug allocator wrapping a real allocator with allocation tracking, stack traces, and invalid-free detection |
+| **Preprocessor** | `pp.c` | Preprocessor utilities |
 
 ## License
 
